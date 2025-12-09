@@ -33,25 +33,12 @@ const About = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-100 via-white to-indigo-100">
       {/* Hero Section */}
-      <section className="relative text-center py-20 px-6 bg-gradient-to-r from-blue-800 to-indigo-900 text-white shadow-xl rounded-b-3xl overflow-hidden">
-        <div className="absolute inset-0 bg-black/40"></div>
-        <div className="relative z-10 flex flex-col items-center justify-center space-y-6">
-          <img
-            src="/logo.png"
-            alt="KGR Logo"
-            className="h-24 w-24 rounded-full shadow-lg border-4 border-yellow-300 animate-fade-in"
-          />
-          <h1 className="text-5xl md:text-6xl font-extrabold tracking-tight drop-shadow-lg animate-fade-in">
-            Empowering Students Through{" "}
-            <span className="text-yellow-300">Vocational Excellence</span>
-          </h1>
-          <p className="max-w-3xl mx-auto text-lg md:text-xl text-gray-200 leading-relaxed font-medium animate-fade-in">
-            KGR Vocational Junior College was founded with the vision of making career-focused education accessible to every student who dreams of entering the healthcare field. We offer more than just a degree; we provide a foundation built on skill-based and practical learning, ensuring students are industry-ready upon graduation.
-          </p>
-        </div>
-        {/* Decorative shapes */}
-        <div className="absolute top-0 left-0 w-32 h-32 bg-yellow-300 rounded-full opacity-30 blur-2xl animate-pulse"></div>
-        <div className="absolute bottom-0 right-0 w-40 h-40 bg-indigo-500 rounded-full opacity-20 blur-2xl animate-pulse"></div>
+      <section>
+        <img
+          src="https://image2url.com/images/1761816278933-34af3e49-2863-4bbc-90a5-aa3958e597ea.png"
+          alt="Empowering Students Through Vocational Excellence"
+          className="w-full h-auto object-cover"
+        />
       </section>
 
       {/* Who We Are / What We Are Section */}

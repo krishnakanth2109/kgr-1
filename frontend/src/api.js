@@ -1,19 +1,20 @@
+// --- START OF FILE api.js ---
 import axios from 'axios';
 
-// Create a new instance of axios with a base URL
+// FIX: In Vite, we must use import.meta.env.
+// We removed 'process.env' because accessing it causes a ReferenceError in Vite.
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 const api = axios.create({
-  baseURL: 'http://localhost:5000/api',
+  baseURL: BASE_URL,
 });
 
-// This is an Axios Interceptor. It's a powerful function that runs
-// BEFORE any request is sent. Its job is to add the
-// authentication token to the headers automatically.
+// Axios Interceptor: Adds the token to headers automatically if it exists
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem('admin-token');
+    // Using sessionStorage as requested
+    const token = sessionStorage.getItem('admin-token');
     if (token) {
-      // The header name 'x-auth-token' MUST match what your
-      // backend authMiddleware is expecting.
       config.headers['x-auth-token'] = token;
     }
     return config;

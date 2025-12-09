@@ -1,3 +1,4 @@
+// --- START OF FILE Contact.jsx ---
 import React from "react";
 
 const Contact = () => {
@@ -15,45 +16,44 @@ const Contact = () => {
 
         <div className="grid md:grid-cols-2 gap-10">
           {/* Contact Information */}
-<div className="bg-white shadow rounded-2xl p-8">
-  <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-    College Information
-  </h2>
-  <p className="text-gray-600 mb-4">
-    <span className="font-medium">KGR Vocational Junior College</span>
-  </p>
-  <p className="text-gray-600 mb-2 flex items-center">
-    <span className="mr-2">📍</span>
-    <a
-      href="https://www.google.com/local/place/fid/0x3a3829fb6890c505:0x6d641c9cfcc4d9f0/photosphere?iu=https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid%3DskMP2bSL7k965YnsoKB56A%26cb_client%3Dsearch.gws-prod.gps%26yaw%3D356.4452%26pitch%3D0%26thumbfov%3D100%26w%3D0%26h%3D0&ik=CAISFnNrTVAyYlNMN2s5NjVZbnNvS0I1NkE%3D&sa=X&ved=2ahUKEwjym4L5zbWPAxWok68BHZG-IOMQpx96BAgaEBE"
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-600 underline hover:text-blue-800 transition"
-    >
-      Vivek St, Sri Vidya Colony, Jayendra Nagar, Siddartha Nagar, Kakinada, Andhra Pradesh 533003
-    </a>
-  </p>
-  <p className="text-gray-600 mb-2 flex items-center">
-    <span className="mr-2">📞</span> +91 98765 43210
-  </p>
-  <p className="text-gray-600 mb-2 flex items-center">
-    <span className="mr-2">📧</span> info@kgrcollege.ac.in
-  </p>
+          <div className="bg-white shadow rounded-2xl p-8">
+            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+              College Information
+            </h2>
+            <p className="text-gray-600 mb-4">
+              <span className="font-medium">KGR Vocational Junior College</span>
+            </p>
+            <p className="text-gray-600 mb-2 flex items-center">
+              <span className="mr-2">📍</span>
+              <a
+                href="https://www.google.com/local/place/fid/0x3a3829fb6890c505:0x6d641c9cfcc4d9f0/photosphere?iu=https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid%3DskMP2bSL7k965YnsoKB56A%26cb_client%3Dsearch.gws-prod.gps%26yaw%3D356.4452%26pitch%3D0%26thumbfov%3D100%26w%3D0%26h%3D0&ik=CAISFnNrTVAyYlNMN2s5NjVZbnNvS0I1NkE%3D&sa=X&ved=2ahUKEwjym4L5zbWPAxWok68BHZG-IOMQpx96BAgaEBE"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-600 underline hover:text-blue-800 transition"
+              >
+                Vivek St, Sri Vidya Colony, Jayendra Nagar, Siddartha Nagar, Kakinada, Andhra Pradesh 533003
+              </a>
+            </p>
+            <p className="text-gray-600 mb-2 flex items-center">
+              <span className="mr-2">📞</span> +91 98765 43210
+            </p>
+            <p className="text-gray-600 mb-2 flex items-center">
+              <span className="mr-2">📧</span> info@kgrcollege.ac.in
+            </p>
 
-  {/* Map */}
-  <div className="mt-6 rounded-lg overflow-hidden shadow-lg">
-    <iframe
-      title="KGR College Location"
-      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3842.123456!2d82.234567!3d16.933456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a3829fb6890c505%3A0x6d641c9cfcc4d9f0!2sKGR%20Vocational%20Junior%20College!5e0!3m2!1sen!2sin!4v1696212345678!5m2!1sen!2sin"
-      width="100%"
-      height="250"
-      style={{ border: 0 }}
-      allowFullScreen=""
-      loading="lazy"
-    ></iframe>
-  </div>
-</div>
-
+            {/* Map */}
+            <div className="mt-6 rounded-lg overflow-hidden shadow-lg">
+              <iframe
+                title="KGR College Location"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3842.123456!2d82.234567!3d16.933456!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a3829fb6890c505%3A0x6d641c9cfcc4d9f0!2sKGR%20Vocational%20Junior%20College!5e0!3m2!1sen!2sin!4v1696212345678!5m2!1sen!2sin"
+                width="100%"
+                height="250"
+                style={{ border: 0 }}
+                allowFullScreen=""
+                loading="lazy"
+              ></iframe>
+            </div>
+          </div>
 
           {/* Contact Form */}
           <div className="bg-white shadow rounded-2xl p-8">

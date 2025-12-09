@@ -1,7 +1,8 @@
+// --- START OF FILE Gallery.jsx ---
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { FaTimes } from "react-icons/fa";
-import axios from "axios";
+import api from "../api"; // Imports the dynamic API helper
 
 const Gallery = () => {
   const [galleryItems, setGalleryItems] = useState([]);
@@ -10,7 +11,7 @@ const Gallery = () => {
   useEffect(() => {
     const fetchItems = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/gallery");
+        const res = await api.get("/gallery");
         setGalleryItems(res.data);
       } catch (error) {
         console.error("Failed to load gallery:", error);

@@ -8,11 +8,14 @@ const app = express();
 // --- THIS IS THE FIX ---
 // Replace the simple app.use(cors()); with this more specific configuration.
 // This explicitly allows your frontend (at http://localhost:5173) to make requests.
-const corsOptions = {
-  origin: 'http://localhost:5173', // Your Vite frontend's address
-  optionsSuccessStatus: 200 // For legacy browser compatibility
-};
-app.use(cors(corsOptions));
+app.use(cors({
+  origin: [
+    "http://localhost:3000",              // For local development
+    "http://localhost:5173",              // For Vite local development
+    "https://kgr-college.netlify.app"     // Your deployed Netlify Frontend
+  ],
+  credentials: true
+}));
 // --- END OF FIX ---
 
 

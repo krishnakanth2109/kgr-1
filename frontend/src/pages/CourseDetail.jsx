@@ -1,18 +1,18 @@
+// --- START OF FILE CourseDetail.jsx ---
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { FaArrowLeft, FaGraduationCap, FaUserMd, FaCheckCircle } from "react-icons/fa";
-import axios from "axios"; // Import axios
+import api from "../api"; // Imports the dynamic API helper
 
 const CourseDetail = () => {
-  const { id } = useParams(); // 'id' here is actually the slug (e.g., "mphw")
+  const { id } = useParams();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch the specific course details from your backend using the slug
   useEffect(() => {
     const fetchCourse = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/courses/${id}`);
+        const res = await api.get(`/courses/${id}`);
         setCourse(res.data);
       } catch (error) {
         console.error("Failed to fetch course details:", error);
@@ -22,7 +22,7 @@ const CourseDetail = () => {
     };
 
     fetchCourse();
-  }, [id]); // Re-run this effect if the id in the URL changes
+  }, [id]);
 
   if (loading) {
     return <p className="text-center text-gray-600 mt-10">Loading course details...</p>;
@@ -48,7 +48,6 @@ const CourseDetail = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent"></div>
 
-          {/* Back Button */}
           <div className="absolute top-6 left-6">
             <Link
               to="/courses"
@@ -58,7 +57,6 @@ const CourseDetail = () => {
             </Link>
           </div>
 
-          {/* Title Overlay */}
           <div className="absolute bottom-6 left-6">
             <h1 className="text-4xl md:text-5xl font-extrabold text-white drop-shadow-lg">
               {course.title}
@@ -68,7 +66,6 @@ const CourseDetail = () => {
 
         {/* Content */}
         <div className="p-10 space-y-10">
-          {/* Description */}
           <section>
             <h2 className="text-2xl font-bold text-blue-900 mb-4">
               About the Course
@@ -76,7 +73,6 @@ const CourseDetail = () => {
             <p className="text-gray-700 leading-relaxed">{course.description}</p>
           </section>
 
-          {/* Highlights */}
           <section>
             <h2 className="text-2xl font-bold text-blue-900 mb-4">
               Course Highlights
@@ -94,7 +90,6 @@ const CourseDetail = () => {
             </ul>
           </section>
 
-          {/* Duration & Eligibility */}
           <section className="grid md:grid-cols-2 gap-8">
             <div className="bg-gray-50 rounded-xl p-6 shadow-sm hover:shadow-md transition">
               <h2 className="text-xl font-bold text-indigo-700 mb-2 flex items-center">
@@ -110,7 +105,6 @@ const CourseDetail = () => {
             </div>
           </section>
 
-          {/* Career Opportunities */}
           <section className="bg-gray-50 rounded-xl p-6 shadow-sm hover:shadow-md transition">
             <h2 className="text-xl font-bold text-indigo-700 mb-2">
               Career Opportunities

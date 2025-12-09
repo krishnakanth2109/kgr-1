@@ -33,7 +33,16 @@ const educationSchema = new mongoose.Schema({
 const studentSchema = new mongoose.Schema({
     // --- Basic Information ---
     admission_number: { type: String, required: true, unique: true, trim: true },
-    roll_number: { type: String, required: true, unique: true, trim: true },
+    
+    // --- FIX APPLIED HERE ---
+    roll_number: { 
+        type: String, 
+        required: false, 
+        unique: true, 
+        trim: true,
+        sparse: true // <--- ADDED THIS: Allows multiple students to have no roll number
+    },
+    
     first_name: { type: String, required: true, trim: true },
     middle_name: { type: String, trim: true },
     last_name: { type: String, required: true, trim: true },
