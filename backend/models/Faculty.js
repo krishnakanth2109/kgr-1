@@ -14,7 +14,7 @@ const addressSchema = new mongoose.Schema({
     state: { type: String, trim: true },
     postal_code: { type: String, trim: true },
 }, { _id: false });
-
+      
 // Main Faculty Schema
 const facultySchema = new mongoose.Schema({
     // --- Basic Information ---
