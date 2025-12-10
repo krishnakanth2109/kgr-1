@@ -1,6 +1,7 @@
+// src/pages/login/AdminLogin.jsx
 import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import api from "../api"; // <-- CORRECT: Import the shared API helper
+import api from "../../api"; 
 
 const AdminLogin = () => {
   const navigate = useNavigate();
@@ -15,24 +16,22 @@ const AdminLogin = () => {
     setLoading(true);
 
     try {
-      // Use the imported api helper for the request
       const response = await api.post("/auth/login", {
         email,
         password,
       });
 
       if (response.data.success) {
-        // Store the JWT token from the response
-        localStorage.setItem("admin-token", response.data.token);
+        // FIXED: Use sessionStorage to match api.js interceptor
+        sessionStorage.setItem("admin-token", response.data.token);
         
-        // No longer need these old items
-        localStorage.removeItem("isAuthenticated");
-        sessionStorage.removeItem("admin-password");
+        // Cleanup potential conflicts
+        localStorage.removeItem("admin-token");
         
         navigate("/admin/dashboard");
       }
     } catch (err) {
-      const message = err.response?.data?.message || "Something went wrong. Please try again.";
+      const message = err.response?.data?.message || "Invalid credentials.";
       setError(message);
     } finally {
       setLoading(false);
@@ -47,7 +46,7 @@ const AdminLogin = () => {
           <p className="text-gray-600 mt-2">Access your admin panel.</p>
         </div>
 
-        {error && <div className="mb-4 text-red-600 text-sm font-medium text-center">{error}</div>}
+        {error && <div className="mb-4 bg-red-50 text-red-600 p-3 rounded-lg text-sm font-medium text-center">{error}</div>}
 
         <form onSubmit={handleLogin} className="space-y-6">
           <div>
@@ -58,7 +57,7 @@ const AdminLogin = () => {
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="admin@college.com"
-              className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
           <div>
@@ -69,7 +68,7 @@ const AdminLogin = () => {
               onChange={(e) => setPassword(e.target.value)}
               required
               placeholder="••••••••"
-              className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+              className="mt-2 w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none"
             />
           </div>
           <button type="submit" disabled={loading} className="w-full bg-blue-600 text-white font-semibold py-3 rounded-xl transition hover:bg-blue-700 disabled:opacity-70">
@@ -77,9 +76,11 @@ const AdminLogin = () => {
           </button>
         </form>
 
-        <p className="text-center text-gray-600 text-sm mt-6">
-          Forgot your password? <Link to="/forgot-password" className="text-blue-600 hover:underline">Reset here</Link>
-        </p>
+        <div className="text-center mt-6">
+          <Link to="/login" className="text-sm text-gray-500 hover:text-blue-600 font-medium">
+            &larr; Back to Selection
+          </Link>
+        </div>
       </div>
     </div>
   );

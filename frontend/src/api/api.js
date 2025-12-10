@@ -1,10 +1,7 @@
-// --- START OF FILE api.js ---
+// --- START OF FILE src/api/api.js ---
 import axios from 'axios';
 
 // Detect the environment variable based on the build tool (Vite vs CRA)
-// If you are using Vite, it uses import.meta.env.VITE_API_URL
-// If using Create React App, it uses process.env.REACT_APP_API_URL
-// Fallback to localhost if neither is found.
 const BASE_URL = 
   import.meta.env.VITE_API_URL || 
   process.env.REACT_APP_API_URL || 
@@ -17,8 +14,14 @@ const api = axios.create({
 // Axios Interceptor: Adds the token to headers automatically if it exists
 api.interceptors.request.use(
   (config) => {
-    // Using sessionStorage as requested
-    const token = sessionStorage.getItem('admin-token');
+    // Check for Admin Token first
+    const adminToken = sessionStorage.getItem('admin-token');
+    // Check for Student Token second
+    const studentToken = sessionStorage.getItem('student-token');
+
+    // Use whichever token is available
+    const token = adminToken || studentToken;
+
     if (token) {
       config.headers['x-auth-token'] = token;
     }

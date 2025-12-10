@@ -10,11 +10,7 @@ const Home = () => {
         <div className="relative max-w-7xl mx-auto px-6 py-28 md:py-36 flex flex-col md:flex-row items-center gap-12">
           {/* Logo & Text */}
           <div className="flex-1 flex flex-col items-center md:items-start text-center md:text-left space-y-8 z-10">
-            <img
-              src="/logo.png"
-              alt="KGR College Logo"
-              className="h-20 w-20 rounded-full shadow-lg border-4 border-white mb-4 animate-fade-in"
-            />
+         
             <h1 className="text-5xl md:text-6xl font-extrabold leading-tight tracking-tight drop-shadow-lg">
               Welcome to{" "}
               <span className="text-white" style={{ fontFamily: "Baskerville Old Face" }}>

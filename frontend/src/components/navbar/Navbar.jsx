@@ -24,7 +24,7 @@ const Navbar = () => {
             alt="KGR Logo"
             className="h-12 w-12 object-contain"
           />
-          <span className="font-bold text-xl text-gray-800 tracking-wide">
+          <span className="font-bold text-xl text-red-800 tracking-wide">
             KGR Vocational Junior College
           </span>
         </Link>
