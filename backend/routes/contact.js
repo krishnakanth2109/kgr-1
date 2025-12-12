@@ -6,6 +6,19 @@ const Contact = require('../models/contact');
 // @route   POST /api/contact
 // @desc    Create a new contact message
 // @access  Public
+// @route   GET /api/contact
+// @desc    Get all messages
+// @access  Private (Admin)
+router.get('/', async (req, res) => {
+  try {
+    const messages = await Contact.find().sort({ _id: -1 });
+    res.json(messages);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server Error");
+  }
+});
+
 router.post('/', async (req, res) => {
   const { fullName, email, message } = req.body;
 

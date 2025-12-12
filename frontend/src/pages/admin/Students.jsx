@@ -1,3 +1,4 @@
+// src/features/students/Students.jsx
 import React, { useState, useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
@@ -7,7 +8,7 @@ import {
   deleteStudent,
   deleteMultipleStudents,
 } from '../../api/studentApi'; 
-import { PlusCircle, Edit, Trash2, KeyRound } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, KeyRound, Eye, EyeOff, Loader2 } from 'lucide-react';
 
 const Students = () => {
   const [students, setStudents] = useState([]);
@@ -246,7 +247,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => (
   </div>
 );
 
-// --- MODAL with Validations (Now includes Password) ---
+// --- MODAL with Validations (Includes Password Toggle & Data Validation) ---
 const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
   const [formData, setFormData] = useState({
     admission_number: student?.admission_number || '',
@@ -262,24 +263,69 @@ const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
     admission_year: student?.admission_year || new Date().getFullYear(),
     status: student?.status || 'Active',
     category: student?.category || 'General',
-    password: '' // NEW: Password field
+    password: '' 
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    
+    // --- Validation 1: Phone Number (Numbers only, Max 10 digits) ---
+    if (name === 'phone_number') {
+      // If value is not numeric (and not empty), ignore the input
+      if (value && !/^\d*$/.test(value)) return;
+      // If value is more than 10 digits, ignore the input
+      if (value.length > 10) return;
+    }
+
+    // --- Validation 2: Names (Alphabets and spaces only) ---
+    // Applies to First, Middle, and Last Name
+    if (['first_name', 'middle_name', 'last_name'].includes(name)) {
+      // If value contains anything other than letters or spaces, ignore input
+      // This prevents users from even typing numbers or special chars
+      if (value && !/^[A-Za-z\s]*$/.test(value)) return;
+    }
+
+    setFormData({ ...formData, [name]: value });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrorMsg('');
 
-    // --- Basic Client-Side Validation ---
-    if (!formData.admission_number || !formData.first_name || !formData.last_name || !formData.email || !formData.phone_number || !formData.dob || !formData.admission_year) {
+    // --- Final Submission Validations ---
+    
+    // 1. Check Required Fields
+    const requiredFields = [
+      'admission_number', 'first_name', 'last_name', 
+      'email', 'phone_number', 'dob', 'admission_year'
+    ];
+    
+    // Simple check to ensure required fields aren't empty
+    const missingField = requiredFields.find(field => !formData[field]);
+    if (missingField) {
        setErrorMsg("Please fill in all required fields marked with *.");
        return;
+    }
+
+    // 2. Check Phone Number Length (Must be exactly 10)
+    if (formData.phone_number.length !== 10) {
+      setErrorMsg("Phone number must be exactly 10 digits.");
+      return;
+    }
+
+    // 3. Double Check Name Validity (Redundant but safe)
+    const nameRegex = /^[A-Za-z\s]+$/;
+    if (!nameRegex.test(formData.first_name) || !nameRegex.test(formData.last_name)) {
+       setErrorMsg("Names must only contain alphabets.");
+       return;
+    }
+    if (formData.middle_name && !nameRegex.test(formData.middle_name)) {
+        setErrorMsg("Middle name must only contain alphabets.");
+        return;
     }
     
     setIsSubmitting(true);
@@ -288,17 +334,10 @@ const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
       // Clean up payload
       const payload = { ...formData };
       
-      // Remove empty optional fields
-      if (!payload.roll_number || payload.roll_number.trim() === '') {
-        delete payload.roll_number;
-      }
-      if (!payload.middle_name || payload.middle_name.trim() === '') {
-        delete payload.middle_name;
-      }
-      // Remove password if empty (so we don't overwrite with blank on edit)
-      if (!payload.password || payload.password.trim() === '') {
-        delete payload.password;
-      }
+      // Remove empty optional fields so backend doesn't receive empty strings
+      if (!payload.roll_number?.trim()) delete payload.roll_number;
+      if (!payload.middle_name?.trim()) delete payload.middle_name;
+      if (!payload.password?.trim()) delete payload.password;
 
       if (isEditing) {
         await updateStudent(student._id, payload);
@@ -308,7 +347,6 @@ const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
       onSuccess();
     } catch (err) {
       console.error("Submit Error:", err);
-      // Capture detailed error from backend
       const msg = err.response?.data?.message || "Operation failed. Please check your inputs.";
       setErrorMsg(msg);
     } finally {
@@ -338,6 +376,7 @@ const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
           <input name="admission_number" value={formData.admission_number} onChange={handleChange} placeholder="Admission Number *" className="p-2 border rounded" required />
           <input name="roll_number" value={formData.roll_number} onChange={handleChange} placeholder="Roll Number (Optional)" className="p-2 border rounded" />
           
+          {/* Names - Validation Enforced in handleChange */}
           <input name="first_name" value={formData.first_name} onChange={handleChange} placeholder="First Name *" className="p-2 border rounded" required />
           <input name="middle_name" value={formData.middle_name} onChange={handleChange} placeholder="Middle Name (Optional)" className="p-2 border rounded" />
           <input name="last_name" value={formData.last_name} onChange={handleChange} placeholder="Last Name *" className="p-2 border rounded" required />
@@ -359,21 +398,40 @@ const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
 
           <div className="col-span-1 md:col-span-2 text-sm font-semibold text-gray-500 uppercase mt-2">Contact Info</div>
           <input type="email" name="email" value={formData.email} onChange={handleChange} placeholder="Email *" className="p-2 border rounded col-span-1 md:col-span-2" required />
-          <input type="tel" name="phone_number" value={formData.phone_number} onChange={handleChange} placeholder="Phone (10 digits) *" className="p-2 border rounded" required pattern="[0-9]{10}" title="Please enter a valid 10-digit phone number" />
+          
+          {/* Phone - Validation Enforced in handleChange + handleSubmit */}
+          <input 
+            type="tel" 
+            name="phone_number" 
+            value={formData.phone_number} 
+            onChange={handleChange} 
+            placeholder="Phone (10 digits) *" 
+            className="p-2 border rounded" 
+            required 
+            maxLength={10} // Prevents typing more than 10
+            title="Please enter exactly 10 digits" 
+          />
 
-          {/* --- NEW SECURITY SECTION --- */}
+          {/* Security Section */}
           <div className="col-span-1 md:col-span-2 text-sm font-semibold text-gray-500 uppercase mt-2 flex items-center gap-2">
             <KeyRound size={16} /> Security
           </div>
-          <div className="col-span-1 md:col-span-2">
+          <div className="col-span-1 md:col-span-2 relative">
             <input 
-              type="password" 
+              type={showPassword ? "text" : "password"} 
               name="password" 
               value={formData.password} 
               onChange={handleChange} 
               placeholder={isEditing ? "New Password (Leave blank to keep current)" : "Password (Default: student123)"} 
-              className="w-full p-2 border rounded" 
+              className="w-full p-2 pr-10 border rounded" 
             />
+            <button 
+              type="button" 
+              onClick={() => setShowPassword(!showPassword)} 
+              className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+            </button>
             <p className="text-xs text-gray-500 mt-1">
               {isEditing ? "Only enter a value if you want to reset the student's password." : "If left blank, password will default to 'student123'."}
             </p>
@@ -394,8 +452,8 @@ const StudentModal = ({ isOpen, onClose, isEditing, student, onSuccess }) => {
 
           <div className="col-span-1 md:col-span-2 flex justify-end gap-3 pt-4 border-t mt-4">
             <button type="button" onClick={onClose} className="px-4 py-2 rounded-md border hover:bg-gray-100">Cancel</button>
-            <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50">
-              {isSubmitting ? 'Saving...' : (isEditing ? 'Update Student' : 'Add Student')}
+            <button type="submit" disabled={isSubmitting} className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 flex items-center gap-2">
+              {isSubmitting ? <Loader2 className="animate-spin h-5 w-5" /> : (isEditing ? 'Update' : 'Save')}
             </button>
           </div>
         </form>

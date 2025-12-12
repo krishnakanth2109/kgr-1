@@ -46,7 +46,7 @@ const Courses = () => {
             </span>
             Our Courses
           </h1>
-          <div className="w-24 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 mx-auto mt-4 rounded-full animate-pulse"></div>
+          <div className="w-24 h-1 bg-gradient-to-r from-red-600 to-indigo-600 mx-auto mt-4 rounded-full animate-pulse"></div>
           <p className="mt-6 text-lg md:text-xl text-gray-700 max-w-2xl mx-auto leading-relaxed font-medium">
             Discover specialized vocational programs designed to empower
             students with skills for the healthcare and medical fields.

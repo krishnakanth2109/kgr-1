@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin } from "react-icons/fa";
+import { FaFacebook, FaTwitter, FaInstagram, FaLinkedin, FaYoutube } from "react-icons/fa";
 import { FiMapPin, FiPhone, FiMail } from "react-icons/fi";
 
 const Footer = () => {
@@ -96,15 +96,13 @@ const Footer = () => {
             <a href="#" className="hover:text-blue-400 transition">
               <FaFacebook className="h-6 w-6" />
             </a>
-            <a href="#" className="hover:text-blue-400 transition">
-              <FaTwitter className="h-6 w-6" />
+            <a href="https://www.youtube.com/@kgrcolleges" className="hover:text-blue-400 transition">
+              <FaYoutube className="h-6 w-6" />
             </a>
             <a href="#" className="hover:text-blue-400 transition">
               <FaInstagram className="h-6 w-6" />
             </a>
-            <a href="#" className="hover:text-blue-400 transition">
-              <FaLinkedin className="h-6 w-6" />
-            </a>
+   
           </div>
         </div>
       </div>

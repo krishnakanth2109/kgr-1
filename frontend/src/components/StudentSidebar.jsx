@@ -1,18 +1,34 @@
-// --- START OF FILE src/components/StudentSidebar.jsx ---
-import React from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
-  Banknote, 
+  Wallet, 
   FileText, 
   GraduationCap, 
   LogOut,
-  User
+  User,
+  ChevronDown, 
+  ChevronRight,
+  CreditCard,
+  History,
+  Sparkles,
+  Menu,
+  ChevronsLeft
 } from 'lucide-react';
 
 const StudentSidebar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const student = JSON.parse(sessionStorage.getItem('student-user') || '{}');
+  
+  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isFinanceOpen, setIsFinanceOpen] = useState(false);
+
+  useEffect(() => {
+    if (location.pathname.includes('/student/fees')) {
+      setIsFinanceOpen(true);
+    }
+  }, [location.pathname]);
 
   const handleLogout = () => {
     sessionStorage.removeItem('student-token');
@@ -20,60 +36,153 @@ const StudentSidebar = () => {
     navigate('/student/login');
   };
 
-  const navItems = [
-    { name: 'Dashboard', path: '/student/dashboard', icon: <LayoutDashboard size={20} /> },
-    { name: 'My Fees', path: '/student/fees', icon: <Banknote size={20} /> },
-    { name: 'Exams & Results', path: '/student/exams', icon: <GraduationCap size={20} /> },
-    { name: 'Documents', path: '/student/documents', icon: <FileText size={20} /> },
-  ];
+  const toggleSidebar = () => {
+    setIsCollapsed(!isCollapsed);
+    if (!isCollapsed) setIsFinanceOpen(false);
+  };
+
+  const sidebarWidth = isCollapsed ? 'w-20' : 'w-72';
+  
+  const linkClasses = ({ isActive }) =>
+    `relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
+      isActive
+        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/30'
+        : 'text-slate-400 hover:bg-white/5 hover:text-amber-400'
+    } ${isCollapsed ? 'justify-center' : ''}`;
+
+  const subLinkClasses = ({ isActive }) =>
+    `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-300 ${
+      isActive
+        ? 'bg-yellow-500/20 text-amber-300 font-medium'
+        : 'text-slate-500 hover:text-amber-300 hover:bg-white/5'
+    }`;
 
   return (
-    <div className="w-64 bg-slate-900 text-white min-h-screen flex flex-col">
-      <div className="p-6 border-b border-slate-700">
-        <h2 className="text-xl font-bold flex items-center gap-2">
-           <GraduationCap className="text-blue-400" />
-           Student Portal
-        </h2>
-        <div className="mt-4 flex items-center gap-3 bg-slate-800 p-3 rounded-lg">
-            <div className="bg-blue-500 rounded-full p-2">
-                <User size={16} />
+    <aside className={`${sidebarWidth} bg-[#0f172a] h-screen flex flex-col border-r border-slate-800 shadow-2xl transition-all duration-300 ease-in-out relative z-50`}>
+      
+      <div className="p-4 flex items-center justify-between relative">
+        {!isCollapsed && (
+          <div className="flex items-center gap-2 animate-fadeIn">
+            <div className="bg-gradient-to-tr from-amber-400 to-yellow-500 p-1.5 rounded-lg shadow-lg">
+              <GraduationCap className="text-white" size={20} />
             </div>
-            <div className="overflow-hidden">
-                <p className="text-sm font-semibold truncate">{student.name || 'Student'}</p>
-                <p className="text-xs text-slate-400 truncate">{student.admission_number}</p>
+            <span className="text-lg font-bold text-white tracking-tight">EduPortal</span>
+          </div>
+        )}
+        
+        <button 
+          onClick={toggleSidebar}
+          className={`p-2 rounded-lg text-slate-400 hover:bg-amber-500/10 hover:text-amber-400 transition-colors ${isCollapsed ? 'mx-auto' : ''}`}
+        >
+          {isCollapsed ? <Menu size={20} /> : <ChevronsLeft size={20} />}
+        </button>
+      </div>
+
+      <div className="px-3 mb-6">
+        <div className={`group relative bg-gradient-to-br from-amber-900/30 to-yellow-900/20 border border-amber-500/30 rounded-2xl transition-all duration-300 hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-500/20 ${isCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}>
+          <div className="flex items-center gap-3">
+            <div className="relative shrink-0">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-slate-900 text-xl font-bold shadow-lg">
+                {student.name?.charAt(0) || 'S'}
+              </div>
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full"></div>
             </div>
+            {!isCollapsed && (
+              <div className="overflow-hidden animate-fadeIn">
+                <p className="text-sm font-semibold text-white truncate group-hover:text-amber-200">
+                  {student.name || 'Student'}
+                </p>
+                <p className="text-[10px] text-amber-300 truncate font-mono">
+                  {student.admission_number || 'ID: --'}
+                </p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
-      <nav className="flex-1 p-4 space-y-2">
-        {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            className={({ isActive }) =>
-              `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
-                isActive
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-slate-300 hover:bg-slate-800 hover:text-white'
-              }`
-            }
+      <nav className="flex-1 px-3 space-y-2 overflow-y-auto custom-scrollbar">
+        
+        <NavLink to="/student/dashboard" className={linkClasses}>
+          <LayoutDashboard size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Dashboard</span>}
+        </NavLink>
+
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={() => {
+              if(isCollapsed) {
+                setIsCollapsed(false);
+                setTimeout(() => setIsFinanceOpen(true), 100);
+              } else {
+                setIsFinanceOpen(!isFinanceOpen);
+              }
+            }}
+            className={`flex items-center w-full px-3 py-3 rounded-xl transition-all duration-300 group ${
+              (isFinanceOpen || location.pathname.includes('/student/fees'))
+                ? 'bg-slate-800/50 text-amber-400 shadow-md' 
+                : 'text-slate-400 hover:bg-white/5 hover:text-amber-400'
+            } ${isCollapsed ? 'justify-center' : 'justify-between'}`}
           >
-            {item.icon}
-            <span>{item.name}</span>
-          </NavLink>
-        ))}
+            <div className="flex items-center gap-3">
+              <Wallet size={20} className={isFinanceOpen ? 'text-amber-400' : ''} />
+              {!isCollapsed && <span className="font-medium animate-fadeIn">Finance</span>}
+            </div>
+            {!isCollapsed && (
+              isFinanceOpen ? <ChevronDown size={16} /> : <ChevronRight size={16} />
+            )}
+          </button>
+
+          <div 
+            className={`overflow-hidden transition-all duration-300 ease-in-out ${
+              (isFinanceOpen && !isCollapsed) ? 'max-h-40 opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0'
+            }`}
+          >
+            <div className="border-l-2 border-amber-700/50 pl-2 space-y-1">
+              <NavLink to="/student/fees/pay" className={subLinkClasses}>
+                <CreditCard size={16} />
+                <span>Due Payments</span>
+              </NavLink>
+              <NavLink to="/student/fees/history" className={subLinkClasses}>
+                <History size={16} />
+                <span>History</span>
+              </NavLink>
+            </div>
+          </div>
+        </div>
+
+        <NavLink to="/student/exams" className={linkClasses}>
+          <GraduationCap size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Exams</span>}
+        </NavLink>
+
+        <NavLink to="/student/documents" className={linkClasses}>
+          <FileText size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Documents</span>}
+        </NavLink>
       </nav>
 
-      <div className="p-4 border-t border-slate-700">
+      <div className="p-3 border-t border-slate-800">
+        {!isCollapsed && (
+          <div className="mb-3 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-3 animate-fadeIn hover:border-amber-400/50 transition-all">
+            <Sparkles size={16} className="text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-xs font-semibold text-amber-300">Exam Season</p>
+              <p className="text-[10px] text-slate-400">Check schedules regularly</p>
+            </div>
+          </div>
+        )}
+
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 w-full rounded-lg text-red-400 hover:bg-red-900/20 transition-colors"
+          className={`flex items-center gap-3 px-3 py-3 w-full rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 transition-colors ${isCollapsed ? 'justify-center' : ''}`}
+          title="Logout"
         >
-          <LogOut size={20} />
-          <span>Logout</span>
+          <LogOut size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium animate-fadeIn">Logout</span>}
         </button>
       </div>
-    </div>
+    </aside>
   );
 };
 

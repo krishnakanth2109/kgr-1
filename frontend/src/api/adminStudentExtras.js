@@ -1,4 +1,4 @@
-// src/api/adminStudentExtras.js
+// --- START OF FILE src/api/adminStudentExtras.js ---
 import api from './api';
 
 // --- DOCUMENTS ---
@@ -45,7 +45,9 @@ export const bulkCreateExams = async (data) => {
 
 // --- FEES & CHECKLIST ---
 export const getStudentFees = async (id) => (await api.get(`/fees/${id}`)).data;
-export const updateStudentFees = async (id, data) => (await api.post(`/fees/${id}`, data)).data;
+
+// ✅ FIXED: Added '/structure' to the URL to match backend route
+export const updateStudentFees = async (id, data) => (await api.post(`/fees/structure/${id}`, data)).data;
 
 export const getChecklist = async (id) => (await api.get(`/documents/checklist/${id}`)).data;
 export const updateChecklist = async (id, data) => (await api.post(`/documents/checklist/${id}`, data)).data;

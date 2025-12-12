@@ -117,6 +117,13 @@ const AdminLayout = () => {
             <Image size={20} />
             {!isCollapsed && <span>Gallery</span>}
           </Link>
+          <Link
+            to="/admin/contact-messages"
+            className="flex items-center gap-3 p-3 rounded-lg text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition"
+          >
+            <Image size={20} />
+            {!isCollapsed && <span>Contact Us messages</span>}
+          </Link>
         </nav>
 
         {/* Logout */}

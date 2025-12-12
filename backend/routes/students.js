@@ -5,19 +5,25 @@ const router = express.Router();
 const Student = require('../models/Student');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const authMiddleware = require('../middleware/authMiddleware'); // Added authMiddleware for protection
 require('dotenv').config();
 
 // @route   POST /api/students/login
 // @desc    Student Login using Email OR Admission Number
 router.post('/login', async (req, res) => {
-    const { identifier, password } = req.body; // Identifier can be email or admission_number
+    // 1. FIX: Trim inputs to remove accidental spaces
+    let { identifier, password } = req.body;
+    identifier = identifier?.trim();
+    password = password?.trim();
 
     if (!identifier || !password) {
         return res.status(400).json({ message: 'Please provide ID/Email and password.' });
     }
 
     try {
-        // Find student by Email OR Admission Number
+        console.log(`Login Attempt: ${identifier}`); // Debug Log
+
+        // Find student (Case-insensitive for Email)
         const student = await Student.findOne({
             $or: [
                 { email: identifier.toLowerCase() },
@@ -26,12 +32,20 @@ router.post('/login', async (req, res) => {
         });
 
         if (!student) {
+            console.log("User not found in DB");
             return res.status(400).json({ message: 'Invalid Credentials' });
+        }
+
+        // 2. FIX: Check if password exists in DB (for old accounts)
+        if (!student.password) {
+            console.log("Account exists but has no password set");
+            return res.status(400).json({ message: 'Account not set up. Contact Admin.' });
         }
 
         // Check Password
         const isMatch = await bcrypt.compare(password, student.password);
         if (!isMatch) {
+            console.log("Password mismatch");
             return res.status(400).json({ message: 'Invalid Credentials' });
         }
 
@@ -71,7 +85,8 @@ router.post('/login', async (req, res) => {
 
 // @route   POST /api/students
 // @desc    Add a new student (Admin)
-router.post('/', async (req, res) => {
+// @access  Protected
+router.post('/', authMiddleware, async (req, res) => {
     try {
         const { roll_number, admission_number, email, password } = req.body;
 
@@ -92,10 +107,9 @@ router.post('/', async (req, res) => {
 
         const newStudent = new Student({
             ...req.body,
-            password: finalPassword
+            password: finalPassword // Pre-save hook in model will hash this
         });
 
-        // Mongoose pre-save hook will hash the password automatically
         const savedStudent = await newStudent.save();
         res.status(201).json(savedStudent);
 
@@ -112,15 +126,13 @@ router.post('/', async (req, res) => {
     }
 });
 
-// ... [KEEP YOUR EXISTING GET, PUT, DELETE ROUTES HERE] ...
-// I am omitting them for brevity, but they stay exactly the same as your previous code.
-
 // @route   GET /api/students
+// @desc    Get all students
 router.get('/', async (req, res) => {
-    // ... same as before
     try {
         const { page = 1, limit = 10, sortField = 'createdAt', sortOrder = 'desc', ...filters } = req.query;
         const query = {};
+        
         if (filters.globalSearch) {
             query.$or = [
                 { first_name: { $regex: filters.globalSearch, $options: 'i' } },
@@ -133,32 +145,50 @@ router.get('/', async (req, res) => {
         if (filters.program) query.program = filters.program;
         if (filters.status) query.status = filters.status;
         if (filters.admissionYear) query.admission_year = filters.admissionYear;
+
         const sortOptions = { [sortField]: sortOrder === 'asc' ? 1 : -1 };
         const skip = (parseInt(page) - 1) * parseInt(limit);
+
         const students = await Student.find(query).sort(sortOptions).skip(skip).limit(parseInt(limit));
         const totalStudents = await Student.countDocuments(query);
+
         res.json({ students, currentPage: parseInt(page), totalPages: Math.ceil(totalStudents / parseInt(limit)), totalStudents });
     } catch (error) { res.status(500).json({ message: 'Server error.' }); }
 });
 
 // @route   PUT /api/students/:id
-router.put('/:id', async (req, res) => {
-    // ... same as before
+// @desc    Update a student (FIXED PASSWORD HASHING)
+router.put('/:id', authMiddleware, async (req, res) => {
     try {
-        // If updating password, we need to handle hashing separately or rely on save()
-        // For simplicity in this update, we assume password isn't updated via this route
-        // or we use save() to trigger the hook.
-        // Using findByIdAndUpdate bypasses pre-save hooks. 
-        // If you want to update password here, verify logic. 
-        // For now, standard update:
-        const updatedStudent = await Student.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const updateData = { ...req.body };
+
+        // 3. FIX: Handle Password Hashing on Update
+        if (updateData.password) {
+            if (updateData.password.trim() === "") {
+                delete updateData.password; // Don't update if empty string sent
+            } else {
+                // Manually hash because findByIdAndUpdate doesn't trigger pre-save hook
+                const salt = await bcrypt.genSalt(10);
+                updateData.password = await bcrypt.hash(updateData.password, salt);
+            }
+        }
+
+        const updatedStudent = await Student.findByIdAndUpdate(
+            req.params.id, 
+            updateData, 
+            { new: true, runValidators: true }
+        );
+
         if (!updatedStudent) return res.status(404).json({ message: 'Student not found.' });
         res.json(updatedStudent);
-    } catch (error) { res.status(500).json({ message: 'Server error.' }); }
+    } catch (error) { 
+        console.error(error);
+        res.status(500).json({ message: 'Server error.' }); 
+    }
 });
 
 // @route   DELETE /api/students/:id
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         const student = await Student.findByIdAndDelete(req.params.id);
         if (!student) return res.status(404).json({ message: 'Student not found.' });
@@ -167,7 +197,7 @@ router.delete('/:id', async (req, res) => {
 });
 
 // @route   POST /api/students/bulk-delete
-router.post('/bulk-delete', async (req, res) => {
+router.post('/bulk-delete', authMiddleware, async (req, res) => {
     try {
         const { ids } = req.body;
         if (!ids || !Array.isArray(ids) || ids.length === 0) return res.status(400).json({ message: 'No IDs provided.' });
@@ -175,5 +205,16 @@ router.post('/bulk-delete', async (req, res) => {
         res.json({ message: 'Students deleted successfully.' });
     } catch (error) { res.status(500).json({ message: 'Server error.' }); }
 });
-
+// Add this route AFTER the login route but BEFORE the '/:id' update route
+// @route   GET /api/students/:id
+// @desc    Get single student by ID
+router.get('/:id', authMiddleware, async (req, res) => {
+    try {
+        const student = await Student.findById(req.params.id);
+        if (!student) return res.status(404).json({ message: 'Student not found.' });
+        res.json(student);
+    } catch (error) { 
+        res.status(500).json({ message: 'Server error.' }); 
+    }
+});
 module.exports = router;

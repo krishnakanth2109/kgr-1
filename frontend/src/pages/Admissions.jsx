@@ -170,7 +170,7 @@ const Admissions = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-blue-900 to-indigo-900 text-white py-24 px-6 overflow-hidden">
+      <div className="relative bg-gradient-to-r from-pink-900 to-purple-900 text-white py-24 px-6 overflow-hidden">
         <div className="max-w-5xl mx-auto text-center relative z-10">
           <p className="text-blue-200 uppercase tracking-widest text-sm mb-4">
             Admissions 2025 Open
