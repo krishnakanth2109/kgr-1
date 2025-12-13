@@ -6,19 +6,23 @@ import {
   FileText, 
   GraduationCap, 
   LogOut,
-  User,
   ChevronDown, 
   ChevronRight,
   CreditCard,
   History,
-  Sparkles,
   Menu,
-  ChevronsLeft
+  ChevronsLeft,
+  CalendarClock, 
+  BookOpen,      
+  Bell,
+  User // Import User Icon
 } from 'lucide-react';
 
 const StudentSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Safe parsing of user data
   const student = JSON.parse(sessionStorage.getItem('student-user') || '{}');
   
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -33,7 +37,7 @@ const StudentSidebar = () => {
   const handleLogout = () => {
     sessionStorage.removeItem('student-token');
     sessionStorage.removeItem('student-user');
-    navigate('/student/login');
+    navigate('/login/student');
   };
 
   const toggleSidebar = () => {
@@ -43,23 +47,25 @@ const StudentSidebar = () => {
 
   const sidebarWidth = isCollapsed ? 'w-20' : 'w-72';
   
+  // Dynamic classes for links
   const linkClasses = ({ isActive }) =>
     `relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
       isActive
-        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-white shadow-lg shadow-amber-500/30'
+        ? 'bg-gradient-to-r from-amber-500 to-yellow-500 text-slate-900 font-bold shadow-lg shadow-amber-500/30'
         : 'text-slate-400 hover:bg-white/5 hover:text-amber-400'
     } ${isCollapsed ? 'justify-center' : ''}`;
 
   const subLinkClasses = ({ isActive }) =>
     `flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all duration-300 ${
       isActive
-        ? 'bg-yellow-500/20 text-amber-300 font-medium'
+        ? 'bg-yellow-500/20 text-amber-300 font-medium border-l-2 border-amber-400 pl-2'
         : 'text-slate-500 hover:text-amber-300 hover:bg-white/5'
     }`;
 
   return (
     <aside className={`${sidebarWidth} bg-[#0f172a] h-screen flex flex-col border-r border-slate-800 shadow-2xl transition-all duration-300 ease-in-out relative z-50`}>
       
+      {/* Header */}
       <div className="p-4 flex items-center justify-between relative">
         {!isCollapsed && (
           <div className="flex items-center gap-2 animate-fadeIn">
@@ -78,21 +84,22 @@ const StudentSidebar = () => {
         </button>
       </div>
 
+      {/* Profile Summary */}
       <div className="px-3 mb-6">
         <div className={`group relative bg-gradient-to-br from-amber-900/30 to-yellow-900/20 border border-amber-500/30 rounded-2xl transition-all duration-300 hover:border-amber-400/50 hover:shadow-lg hover:shadow-amber-500/20 ${isCollapsed ? 'p-2 flex justify-center' : 'p-3'}`}>
           <div className="flex items-center gap-3">
             <div className="relative shrink-0">
-              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-slate-900 text-xl font-bold shadow-lg">
+              <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-400 to-yellow-500 flex items-center justify-center text-slate-900 text-xl font-bold shadow-lg uppercase">
                 {student.name?.charAt(0) || 'S'}
               </div>
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 border-2 border-slate-900 rounded-full"></div>
+              <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-slate-900 rounded-full"></div>
             </div>
             {!isCollapsed && (
               <div className="overflow-hidden animate-fadeIn">
                 <p className="text-sm font-semibold text-white truncate group-hover:text-amber-200">
                   {student.name || 'Student'}
                 </p>
-                <p className="text-[10px] text-amber-300 truncate font-mono">
+                <p className="text-[10px] text-amber-300 truncate font-mono opacity-80">
                   {student.admission_number || 'ID: --'}
                 </p>
               </div>
@@ -101,6 +108,7 @@ const StudentSidebar = () => {
         </div>
       </div>
 
+      {/* Navigation */}
       <nav className="flex-1 px-3 space-y-2 overflow-y-auto custom-scrollbar">
         
         <NavLink to="/student/dashboard" className={linkClasses}>
@@ -108,6 +116,28 @@ const StudentSidebar = () => {
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Dashboard</span>}
         </NavLink>
 
+        {/* --- Profile Link --- */}
+        <NavLink to="/student/profile" className={linkClasses}>
+          <User size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">My Profile</span>}
+        </NavLink>
+
+        <NavLink to="/student/timetable" className={linkClasses}>
+          <CalendarClock size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Time Table</span>}
+        </NavLink>
+
+        <NavLink to="/student/exams" className={linkClasses}>
+          <GraduationCap size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Academics</span>}
+        </NavLink>
+
+        <NavLink to="/student/resources" className={linkClasses}>
+          <BookOpen size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Resources</span>}
+        </NavLink>
+
+        {/* --- Finance Section --- */}
         <div className="flex flex-col gap-1">
           <button
             onClick={() => {
@@ -138,7 +168,7 @@ const StudentSidebar = () => {
               (isFinanceOpen && !isCollapsed) ? 'max-h-40 opacity-100 mt-1 pl-4' : 'max-h-0 opacity-0'
             }`}
           >
-            <div className="border-l-2 border-amber-700/50 pl-2 space-y-1">
+            <div className="border-l-2 border-amber-700/30 pl-2 space-y-1">
               <NavLink to="/student/fees/pay" className={subLinkClasses}>
                 <CreditCard size={16} />
                 <span>Due Payments</span>
@@ -151,28 +181,19 @@ const StudentSidebar = () => {
           </div>
         </div>
 
-        <NavLink to="/student/exams" className={linkClasses}>
-          <GraduationCap size={20} className="shrink-0" />
-          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Exams</span>}
-        </NavLink>
-
         <NavLink to="/student/documents" className={linkClasses}>
           <FileText size={20} className="shrink-0" />
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Documents</span>}
         </NavLink>
+
+        <NavLink to="/student/notifications" className={linkClasses}>
+          <Bell size={20} className="shrink-0" />
+          {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Notifications</span>}
+        </NavLink>
       </nav>
 
+      {/* Footer */}
       <div className="p-3 border-t border-slate-800">
-        {!isCollapsed && (
-          <div className="mb-3 bg-gradient-to-br from-amber-500/10 to-yellow-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-3 animate-fadeIn hover:border-amber-400/50 transition-all">
-            <Sparkles size={16} className="text-amber-400 shrink-0 mt-0.5" />
-            <div>
-              <p className="text-xs font-semibold text-amber-300">Exam Season</p>
-              <p className="text-[10px] text-slate-400">Check schedules regularly</p>
-            </div>
-          </div>
-        )}
-
         <button
           onClick={handleLogout}
           className={`flex items-center gap-3 px-3 py-3 w-full rounded-xl text-red-400 hover:text-white hover:bg-red-500/10 transition-colors ${isCollapsed ? 'justify-center' : ''}`}

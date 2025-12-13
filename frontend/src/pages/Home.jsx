@@ -176,89 +176,78 @@ const Home = () => {
     <div className="min-h-screen bg-[#fafaf9] text-stone-800">
       
       {/* 
-        SECTION: HERO 
-        Theme: Gradient of Light Magenta to Rich Brown
+        ================================================================
+        SECTION: HERO (Background Image with Overlay)
+        ================================================================
       */}
       <motion.section 
         initial="hidden"
         animate="visible"
         variants={fadeInUp}
-        className="relative bg-gradient-to-br from-[#d946ef] via-[#a21caf] to-[#78350f] text-white shadow-2xl rounded-b-4xl overflow-hidden"
+        className="relative h-[90vh] flex items-center justify-center overflow-hidden"
       >
-        {/* Animated Background Blobs */}
-        <div className="absolute inset-0">
-          <div className="absolute top-0 left-0 w-72 h-72 bg-fuchsia-400 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-pulse"></div>
-          <div className="absolute bottom-0 right-0 w-72 h-72 bg-amber-700 rounded-full mix-blend-overlay filter blur-3xl opacity-30 animate-pulse delay-1000"></div>
-          <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-pink-500 rounded-full mix-blend-overlay filter blur-3xl opacity-20 animate-pulse delay-500"></div>
+        {/* Background Image */}
+        <div className="absolute inset-0 z-0">
+          <img
+            src="https://image2url.com/images/1765531014941-3213c232-3f53-4c67-b8b3-1e6cb73c28f9.png"
+            alt="KGR College Texture Background"
+            className="w-full h-full object-cover"
+          />
+          {/* Overlay to ensure text readability - Using theme colors (Dark Magenta/Brown tint) */}
+          <div className="absolute inset-0 bg-gradient-to-r 
+from-[#ff66cc]/80 
+via-[#cc3399]/70 
+to-[#691B32]/80 
+mix-blend-multiply"></div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-6 py-28 md:py-40 flex flex-col md:flex-row items-center gap-12">
-          {/* Logo & Text */}
+        {/* Content */}
+        <div className="relative z-10 max-w-5xl mx-auto px-6 text-center text-white">
           <motion.div 
             variants={slideIn}
-            className="flex-1 flex flex-col items-center md:items-start text-center md:text-left space-y-8 z-10"
+            className="flex flex-col items-center"
           >
-            <motion.img
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              transition={{ type: "spring", stiffness: 300 }}
-              src="/logo.png"
-              alt="KGR College Logo"
-              className="h-24 w-24 rounded-full shadow-2xl border-4 border-fuchsia-200 mb-4"
-            />
-            <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight drop-shadow-2xl">
+           
+            <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight drop-shadow-2xl mb-6">
               Welcome to{" "}
-              <span className="bg-gradient-to-r from-fuchsia-200 via-pink-200 to-stone-200 bg-clip-text text-transparent">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-200 via-pink-200 to-stone-200">
                 KGR College
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-fuchsia-50 max-w-xl font-medium">
-              Shaping the future of students who aspire to build careers in healthcare.
+            <p className="text-xl md:text-2xl text-fuchsia-50 max-w-2xl font-medium leading-relaxed mb-10 drop-shadow-md">
+              Shaping the future of students who aspire to build careers in healthcare through excellence in vocational education.
             </p>
+            
             <motion.div 
               variants={staggerContainer}
-              className="flex flex-col sm:flex-row gap-6 justify-center md:justify-start mt-4"
+              className="flex flex-col sm:flex-row gap-6 justify-center mt-4"
             >
               <motion.div variants={scaleIn}>
                 <Link
                   to="/admissions"
-                  className="px-10 py-4 bg-white text-fuchsia-900 font-black rounded-2xl shadow-2xl 
-                  hover:bg-fuchsia-50 transition-all duration-300 hover:scale-110 hover:shadow-[0_20px_50px_rgba(217,70,239,0.4)] 
-                  transform hover:-translate-y-1 text-lg"
+                  className="px-10 py-4 bg-white text-fuchsia-900 font-black rounded-full shadow-2xl 
+                  hover:bg-fuchsia-50 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] 
+                  transform hover:-translate-y-1 text-lg flex items-center gap-2"
                 >
-                  Apply Now
+                  Apply Now <FaCheckCircle className="text-fuchsia-600"/>
                 </Link>
               </motion.div>
               <motion.div variants={scaleIn}>
                 <Link
                   to="/courses"
-                  className="px-10 py-4 border-2 border-fuchsia-200 text-white rounded-2xl 
-                  hover:bg-white hover:text-fuchsia-900 transition-all duration-300 
-                  hover:scale-110 hover:shadow-2xl transform hover:-translate-y-1 text-lg"
+                  className="px-10 py-4 border-2 border-fuchsia-200 text-white rounded-full font-bold
+                  hover:bg-white/10 transition-all duration-300 backdrop-blur-sm
+                  hover:scale-110 hover:shadow-2xl transform hover:-translate-y-1 text-lg flex items-center gap-2"
                 >
-                  Explore Courses
+                  Explore Courses <FaAward />
                 </Link>
               </motion.div>
             </motion.div>
           </motion.div>
-          
-          {/* Hero Image */}
-          <motion.div 
-            variants={rotateIn}
-            className="flex-1 flex justify-center items-center z-10"
-          >
-            <motion.div
-              whileHover={{ scale: 1.05 }}
-              className="relative"
-            >
-              <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-500 to-amber-600 rounded-3xl blur-lg opacity-50"></div>
-              <img
-                src="https://image2url.com/images/1765531014941-3213c232-3f53-4c67-b8b3-1e6cb73c28f9.png"
-                alt="Medical students collaborating"
-                className="relative rounded-3xl shadow-2xl border-4 border-white/30 w-full max-w-lg object-cover"
-              />
-            </motion.div>
-          </motion.div>
         </div>
+        
+        {/* Decorative Bottom Curve */}
+        <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-[#fafaf9] to-transparent z-20"></div>
       </motion.section>
 
       {/* SECTION: HERO QUOTE (Light BG) */}
@@ -267,7 +256,7 @@ const Home = () => {
         whileInView="visible"
         viewport={{ once: true }}
         variants={fadeInUp}
-        className="py-16 bg-white"
+        className="py-20 bg-white"
       >
         <div className="max-w-5xl mx-auto px-6 text-center">
           <motion.h2 
