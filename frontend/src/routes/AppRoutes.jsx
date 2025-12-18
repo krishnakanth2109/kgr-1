@@ -32,6 +32,8 @@ const StudentsPage = lazy(() => import("../pages/admin/Students"));
 const AdminDocumentManager = lazy(() => import("../pages/admin/AdminDocumentManager"));
 const AdminExamManager = lazy(() => import("../pages/admin/AdminExamManager"));
 const ContactMessages = lazy(() => import("../pages/admin/ContactMessages"));
+// NEW IMPORT FOR ADMISSIONS
+const AdminAdmissions = lazy(() => import("../pages/admin/AdminAdmissions"));
 
 // Admin Fee Management
 const FeeDashboard = lazy(() => import("../pages/admin/fees/FeeDashboard"));
@@ -114,6 +116,8 @@ const AppRoutes = () => {
         >
           {/* General */}
           <Route path="dashboard" element={<AdminDashboard />} />
+          {/* NEW ADMISSIONS ROUTE */}
+          <Route path="admissions" element={<AdminAdmissions />} />
           
           {/* Fee Management System */}
           <Route path="fees/dashboard" element={<FeeDashboard />} />

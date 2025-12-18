@@ -1,52 +1,78 @@
 import React, { useState, useRef, useEffect } from "react";
+import api from "../api/api"; // Importing your configured Axios instance
 import {
   FaFileAlt,
-  FaIdCard,
-  FaMoneyCheckAlt,
+  FaPhoneAlt,
   FaCheckCircle,
+  FaUniversity,
+  FaUserGraduate,
+  FaChalkboardTeacher,
+  FaFlask,
+  FaPaperPlane
 } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 
+// Simplified Steps Data
 const steps = [
   {
     id: 1,
-    title: "Application Form",
-    description:
-      "Fill out the admission application form with accurate personal and academic details.",
-    icon: <FaFileAlt className="text-white text-2xl" />,
-    color: "bg-blue-600",
+    title: "Fill Details",
+    description: "Provide your basic contact information so we can reach you.",
+    icon: <FaFileAlt className="text-white text-3xl" />,
+    color: "bg-pink-600",
+    gradient: "from-pink-500 to-rose-600",
   },
   {
     id: 2,
-    title: "Document Submission",
-    description:
-      "Submit required documents including ID proof, previous mark sheets, and passport-size photos.",
-    icon: <FaIdCard className="text-white text-2xl" />,
-    color: "bg-green-600",
+    title: "Counseling",
+    description: "Our experts will contact you to guide you through course selection.",
+    icon: <FaPhoneAlt className="text-white text-3xl" />,
+    color: "bg-rose-600",
+    gradient: "from-rose-500 to-red-600",
   },
   {
     id: 3,
-    title: "Fee Payment",
-    description:
-      "Pay the admission fee online or at the college office to confirm your seat.",
-    icon: <FaMoneyCheckAlt className="text-white text-2xl" />,
-    color: "bg-indigo-600",
+    title: "Admission",
+    description: "Finalize your paperwork and join our campus.",
+    icon: <FaCheckCircle className="text-white text-3xl" />,
+    color: "bg-red-700",
+    gradient: "from-red-600 to-pink-700",
+  },
+];
+
+// Features Content
+const features = [
+  {
+    icon: <FaUniversity className="text-4xl text-pink-600" />,
+    title: "State-of-the-Art Campus",
+    desc: "Experience learning in a modern environment.",
+  },
+  {
+    icon: <FaChalkboardTeacher className="text-4xl text-rose-600" />,
+    title: "Expert Faculty",
+    desc: "Learn from industry experts dedicated to your success.",
+  },
+  {
+    icon: <FaUserGraduate className="text-4xl text-red-600" />,
+    title: "Career Guidance",
+    desc: "Dedicated placement cell providing career counseling.",
+  },
+  {
+    icon: <FaFlask className="text-4xl text-pink-700" />,
+    title: "Practical Training",
+    desc: "Hands-on training in our fully equipped labs.",
   },
 ];
 
 const Admissions = () => {
   const [showModal, setShowModal] = useState(false);
-  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    course: "",
-    idProof: null,
-    marksheet: null,
-    photo: null,
   });
   const [errors, setErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const modalRef = useRef(null);
 
   // Accessibility: trap focus in modal
@@ -54,209 +80,176 @@ const Admissions = () => {
     if (showModal) {
       const handleKeyDown = (e) => {
         if (e.key === "Escape") setShowModal(false);
-        if (e.key === "Tab" && modalRef.current) {
-          const focusable = modalRef.current.querySelectorAll(
-            'input, select, button, [tabindex]:not([tabindex="-1"])'
-          );
-          const first = focusable[0];
-          const last = focusable[focusable.length - 1];
-          if (!e.shiftKey && document.activeElement === last) {
-            e.preventDefault();
-            first.focus();
-          } else if (e.shiftKey && document.activeElement === first) {
-            e.preventDefault();
-            last.focus();
-          }
-        }
       };
       document.addEventListener("keydown", handleKeyDown);
       return () => document.removeEventListener("keydown", handleKeyDown);
     }
   }, [showModal]);
 
-  const validateStep = () => {
+  // --- VALIDATION LOGIC ---
+  const validateForm = () => {
     let newErrors = {};
-    if (step === 1) {
-      if (!formData.name.trim()) newErrors.name = "Name is required.";
-      if (!formData.email.trim()) newErrors.email = "Email is required.";
-      else if (!/^\S+@\S+\.\S+$/.test(formData.email))
-        newErrors.email = "Invalid email format.";
-      if (!formData.phone.trim()) newErrors.phone = "Phone is required.";
-      else if (!/^\d{10}$/.test(formData.phone))
-        newErrors.phone = "Enter a valid 10-digit phone number.";
-      if (!formData.course) newErrors.course = "Please select a course.";
+
+    // 1. Name Validation
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required.";
+    } else if (!/^[a-zA-Z\s]+$/.test(formData.name)) {
+      newErrors.name = "Name should contain only alphabets.";
     }
-    if (step === 2) {
-      if (!formData.idProof) newErrors.idProof = "ID Proof is required.";
-      if (!formData.marksheet) newErrors.marksheet = "Marksheet is required.";
-      if (!formData.photo) newErrors.photo = "Photo is required.";
+
+    // 2. Email Validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Enter a valid email address.";
     }
+
+    // 3. Phone Validation (Exactly 10 digits)
+    if (!formData.phone.trim()) {
+      newErrors.phone = "Phone number is required.";
+    } else if (!/^\d{10}$/.test(formData.phone)) {
+      newErrors.phone = "Enter a valid 10-digit mobile number.";
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
-    if (validateStep()) setStep((prev) => prev + 1);
-  };
-  const handlePrev = () => setStep((prev) => prev - 1);
-
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [name]: files ? files[0] : value,
+      [name]: value,
     });
-    setErrors({ ...errors, [name]: undefined });
+    // Clear error for the modified field
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: undefined });
+    }
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  if (!validateStep()) return;
+    e.preventDefault();
+    if (!validateForm()) return;
+    setIsSubmitting(true);
 
-  // Convert files to base64
-  const fileToBase64 = (file) =>
-    new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () =>
-        resolve({
-          name: file.name,
-          mimeType: file.type,
-          data: reader.result.split(",")[1], // remove "data:...base64,"
+    try {
+      const payload = {
+        name: formData.name,
+        email: formData.email,
+        phone: formData.phone,
+      };
+
+      const res = await api.post("/admissions", payload);
+
+      if (res.status === 200 || res.status === 201) {
+        alert("Details submitted successfully! We will contact you soon.");
+        setShowModal(false);
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
         });
-      reader.onerror = reject;
-    });
-
-  const payload = {
-    name: formData.name,
-    email: formData.email,
-    phone: formData.phone,
-    course: formData.course,
-    idProof: formData.idProof ? await fileToBase64(formData.idProof) : null,
-    marksheet: formData.marksheet ? await fileToBase64(formData.marksheet) : null,
-    photo: formData.photo ? await fileToBase64(formData.photo) : null,
+      }
+    } catch (error) {
+      console.error(error);
+      const msg = error.response?.data?.message || "Something went wrong. Please try again.";
+      alert("Error: " + msg);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  try {
-    const res = await fetch("http://localhost:5000/api/admissions", {  method: "POST",
-      body: JSON.stringify(payload),
-      headers: { "Content-Type": "application/json" },
-    });
-
-    const result = await res.json();
-    if (result.status === "success") {
-      alert("Application submitted successfully!");
-      setShowModal(false);
-      setStep(1);
-      setFormData({
-        name: "",
-        email: "",
-        phone: "",
-        course: "",
-        idProof: null,
-        marksheet: null,
-        photo: null,
-      });
-    } else {
-      alert("Error: " + result.message);
-    }
-  } catch (error) {
-    alert("Something went wrong.");
-    console.error(error);
-  }
-};
-
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
+    <div className="min-h-screen bg-rose-50 font-sans text-gray-800">
       {/* Hero Section */}
-      <div className="relative bg-gradient-to-r from-pink-900 to-purple-900 text-white py-24 px-6 overflow-hidden">
-        <div className="max-w-5xl mx-auto text-center relative z-10">
-          <p className="text-blue-200 uppercase tracking-widest text-sm mb-4">
-            Admissions 2025 Open
-          </p>
-          <h1 className="text-5xl font-extrabold drop-shadow-lg">
-            Admissions Portal
-          </h1>
-          <p className="mt-6 text-lg text-blue-100 max-w-3xl mx-auto">
-            Begin your journey at{" "}
-            <span className="font-semibold">KGR Vocational Junior College</span>
-            . Follow the guided process to secure your admission today.
-          </p>
-          <div className="mt-8 flex justify-center space-x-4">
-            <button
-              onClick={() => setShowModal(true)}
-              className="px-8 py-3 bg-white text-blue-800 font-semibold rounded-lg shadow-md hover:scale-105 transition"
-            >
-              Quick Apply
-            </button>
-          </div>
-        </div>
-      </div>
+      <div className="relative bg-gradient-to-br from-pink-900 via-rose-800 to-red-900 text-white py-32 px-6 overflow-hidden">
+        <div className="absolute top-0 left-0 w-64 h-64 bg-white opacity-5 rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
+        <div className="absolute bottom-0 right-0 w-96 h-96 bg-pink-500 opacity-10 rounded-full blur-3xl translate-x-1/3 translate-y-1/3"></div>
 
-      {/* Progress Timeline */}
-      <div className="max-w-5xl mx-auto mt-16 px-6">
-        <div className="flex justify-between relative">
-          {steps.map((step, index) => (
-            <div key={step.id} className="flex flex-col items-center w-full">
-              <div
-                className={`w-14 h-14 flex items-center justify-center rounded-full ${step.color} shadow-lg z-10`}
+        <div className="max-w-6xl mx-auto text-center relative z-10">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+          >
+            <span className="inline-block py-1 px-3 rounded-full bg-pink-800/50 border border-pink-400/30 text-pink-100 text-sm font-semibold tracking-wider mb-6">
+              ADMISSIONS OPEN FOR 2025-26
+            </span>
+            <h1 className="text-5xl md:text-7xl font-extrabold leading-tight mb-6 drop-shadow-md">
+              Start Your <br />
+              <span className="text-pink-200">Journey Today</span>
+            </h1>
+            <p className="mt-6 text-lg md:text-xl text-pink-50 max-w-3xl mx-auto leading-relaxed">
+              Join <span className="font-semibold text-white">KGR Vocational Junior College</span>. Fill out the form below and let us guide you toward a successful career.
+            </p>
+            <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4">
+              <button
+                onClick={() => setShowModal(true)}
+                className="px-10 py-4 bg-white text-rose-900 font-bold rounded-full shadow-xl hover:bg-pink-50 hover:scale-105 transition-all duration-300"
               >
-                {step.icon}
-              </div>
-              <p className="mt-3 text-sm font-medium text-gray-800">
-                {step.title}
-              </p>
-              {index < steps.length - 1 && (
-                <div className="absolute top-7 left-[15%] right-[15%] border-t-4 border-blue-200 -z-10" />
-              )}
+                Enquire Now
+              </button>
             </div>
-          ))}
+          </motion.div>
         </div>
       </div>
 
-      {/* Detailed Steps */}
-      <div className="max-w-6xl mx-auto py-16 px-6 grid md:grid-cols-3 gap-10">
-        {steps.map((step) => (
-          <div
-            key={step.id}
-            className="bg-white p-8 rounded-2xl shadow-lg hover:shadow-2xl transition transform hover:-translate-y-1"
-          >
-            <div
-              className={`w-14 h-14 flex items-center justify-center rounded-full ${step.color} shadow-md`}
-            >
-              {step.icon}
-            </div>
-            <h3 className="text-xl font-semibold text-gray-800 mt-4">
-              Step {step.id}: {step.title}
-            </h3>
-            <p className="text-gray-600 mt-2">{step.description}</p>
+      {/* Why Choose Us */}
+      <div className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-6">
+          <div className="text-center mb-16">
+            <h2 className="text-pink-600 font-bold tracking-wide uppercase text-sm mb-2">Why Choose KGR?</h2>
+            <h3 className="text-3xl md:text-4xl font-bold text-gray-900">Empowering Students, Building Careers</h3>
+            <div className="w-24 h-1 bg-gradient-to-r from-pink-500 to-red-500 mx-auto mt-4 rounded-full"></div>
           </div>
-        ))}
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="p-6 bg-rose-50 rounded-2xl border border-rose-100 hover:shadow-xl hover:border-pink-200 transition-all duration-300 text-center group"
+              >
+                <div className="w-16 h-16 mx-auto mb-4 bg-white rounded-full flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+                  {feature.icon}
+                </div>
+                <h4 className="text-xl font-bold text-gray-800 mb-2 group-hover:text-pink-700 transition-colors">
+                  {feature.title}
+                </h4>
+                <p className="text-gray-600 text-sm leading-relaxed">{feature.desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
       </div>
 
-      {/* Call to Action */}
-      <div className="py-20 bg-blue-900 text-white text-center">
-        <h2 className="text-2xl font-semibold mb-6">
-          Ready to begin your journey with us?
-        </h2>
-        <div className="flex justify-center space-x-4 mb-8">
-          <button
-            onClick={() => setShowModal(true)}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-700 text-white font-semibold text-lg rounded-xl shadow-lg hover:scale-105 transition"
-          >
-            Apply Now
-          </button>
-        </div>
-        <div className="flex justify-center space-x-8 text-blue-200 text-sm">
-          <div className="flex items-center space-x-2">
-            <FaCheckCircle /> <span>Accredited Programs</span>
+      {/* Timeline */}
+      <div className="bg-gradient-to-b from-rose-50 to-white py-24 px-6 relative">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">Simple Admission Process</h2>
+            <p className="text-gray-600 max-w-2xl mx-auto">Get started in three easy steps.</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <FaCheckCircle /> <span>Experienced Faculty</span>
-          </div>
-          <div className="flex items-center space-x-2">
-            <FaCheckCircle /> <span>Career-Oriented Courses</span>
+          <div className="grid md:grid-cols-3 gap-12 relative">
+            <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-1 bg-gradient-to-r from-pink-200 via-rose-300 to-red-200 -z-0"></div>
+            {steps.map((step, index) => (
+              <motion.div
+                key={step.id}
+                initial={{ opacity: 0, scale: 0.9 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.2 }}
+                className="relative z-10 flex flex-col items-center text-center"
+              >
+                <div className={`w-24 h-24 flex items-center justify-center rounded-full bg-gradient-to-br ${step.gradient} shadow-lg shadow-pink-200 mb-6 transform hover:scale-110 transition-transform duration-300 border-4 border-white`}>
+                  {step.icon}
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
+                <p className="text-gray-600 leading-relaxed px-4">{step.description}</p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </div>
@@ -265,366 +258,91 @@ const Admissions = () => {
       <AnimatePresence>
         {showModal && (
           <motion.div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-rose-900/80 backdrop-blur-sm flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
               ref={modalRef}
-              className="bg-white rounded-2xl shadow-xl max-w-2xl w-full p-8 relative"
-              initial={{ scale: 0.8, y: 50 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.8, y: 50 }}
-              transition={{ type: "spring", stiffness: 120 }}
+              className="bg-white rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
+              initial={{ scale: 0.9, y: 50, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.9, y: 50, opacity: 0 }}
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
               tabIndex={-1}
-              aria-modal="true"
               role="dialog"
+              aria-modal="true"
             >
-              {/* Close Button */}
-              <button
-                onClick={() => setShowModal(false)}
-                className="absolute top-4 right-4 text-gray-500 hover:text-red-600 text-xl"
-                aria-label="Close modal"
-              >
-                ✕
-              </button>
-
-              {/* Stepper */}
-              <div className="flex justify-between mb-8">
-                {["Personal", "Documents", "Review"].map((label, i) => (
-                  <div
-                    key={i}
-                    className={`flex-1 text-center relative ${step === i + 1 ? "text-blue-600 font-bold" : "text-gray-400"}`}
-                  >
-                    <span
-                      className={`block w-8 h-8 mx-auto rounded-full border-2 ${step === i + 1 ? "border-blue-600 bg-blue-100" : "border-gray-300 bg-gray-100"} flex items-center justify-center font-bold text-lg mb-2`}
-                    >
-                      {i + 1}
-                    </span>
-                    {label}
-                    {i < 2 && (
-                      <span className="absolute top-4 right-0 w-8 h-1 bg-blue-200 rounded-full"></span>
-                    )}
-                  </div>
-                ))}
+              <div className="bg-gradient-to-r from-pink-600 to-rose-700 p-6 text-white relative">
+                <h2 className="text-2xl font-bold">Quick Enquiry</h2>
+                <p className="text-pink-100 text-sm">Fill in your details and we will call you back.</p>
+                <button
+                  onClick={() => setShowModal(false)}
+                  className="absolute top-6 right-6 text-white/80 hover:text-white bg-white/10 hover:bg-white/20 rounded-full p-2 transition"
+                >
+                  ✕
+                </button>
               </div>
 
-              <form className="space-y-6" autoComplete="off">
-                {step === 1 && (
-                  <>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="name"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Full Name
-                      </label>
-                      <input
-                        id="name"
-                        type="text"
-                        name="name"
-                        placeholder="Full Name"
-                        value={formData.name}
-                        onChange={handleChange}
-                        className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.name ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.name}
-                        aria-describedby={
-                          errors.name ? "name-error" : undefined
-                        }
-                      />
-                      {errors.name && (
-                        <span
-                          id="name-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.name}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="email"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Email
-                      </label>
-                      <input
-                        id="email"
-                        type="email"
-                        name="email"
-                        placeholder="Email"
-                        value={formData.email}
-                        onChange={handleChange}
-                        className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.email ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.email}
-                        aria-describedby={
-                          errors.email ? "email-error" : undefined
-                        }
-                      />
-                      {errors.email && (
-                        <span
-                          id="email-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.email}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="phone"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Phone Number
-                      </label>
-                      <input
-                        id="phone"
-                        type="tel"
-                        name="phone"
-                        placeholder="Phone Number"
-                        value={formData.phone}
-                        onChange={handleChange}
-                        className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.phone ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.phone}
-                        aria-describedby={
-                          errors.phone ? "phone-error" : undefined
-                        }
-                      />
-                      {errors.phone && (
-                        <span
-                          id="phone-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.phone}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="course"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Course
-                      </label>
-                      <select
-                        id="course"
-                        name="course"
-                        value={formData.course}
-                        onChange={handleChange}
-                        className={`w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.course ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.course}
-                        aria-describedby={
-                          errors.course ? "course-error" : undefined
-                        }
-                      >
-                        <option value="">Select Course</option>
-                        <option value="MPHW">
-                          MPHW - Multi-Purpose Health Worker
-                        </option>
-                        <option value="MLT">
-                          MLT - Medical Laboratory Technology
-                        </option>
-                      </select>
-                      {errors.course && (
-                        <span
-                          id="course-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.course}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {step === 2 && (
-                  <>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="idProof"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        ID Proof
-                      </label>
-                      <input
-                        id="idProof"
-                        type="file"
-                        name="idProof"
-                        onChange={handleChange}
-                        className={`mt-1 block w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.idProof ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.idProof}
-                        aria-describedby={
-                          errors.idProof ? "idProof-error" : undefined
-                        }
-                      />
-                      {errors.idProof && (
-                        <span
-                          id="idProof-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.idProof}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="marksheet"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Marksheet
-                      </label>
-                      <input
-                        id="marksheet"
-                        type="file"
-                        name="marksheet"
-                        onChange={handleChange}
-                        className={`mt-1 block w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.marksheet ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.marksheet}
-                        aria-describedby={
-                          errors.marksheet ? "marksheet-error" : undefined
-                        }
-                      />
-                      {errors.marksheet && (
-                        <span
-                          id="marksheet-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.marksheet}
-                        </span>
-                      )}
-                    </div>
-                    <div className="mb-4">
-                      <label
-                        htmlFor="photo"
-                        className="block text-gray-700 font-medium mb-1"
-                      >
-                        Passport Size Photo
-                      </label>
-                      <input
-                        id="photo"
-                        type="file"
-                        name="photo"
-                        onChange={handleChange}
-                        className={`mt-1 block w-full border rounded-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-600 ${errors.photo ? "border-red-500" : ""}`}
-                        required
-                        aria-invalid={!!errors.photo}
-                        aria-describedby={
-                          errors.photo ? "photo-error" : undefined
-                        }
-                      />
-                      {errors.photo && (
-                        <span
-                          id="photo-error"
-                          className="text-red-500 text-sm mt-1 block"
-                        >
-                          {errors.photo}
-                        </span>
-                      )}
-                    </div>
-                  </>
-                )}
-
-                {step === 3 && (
+              <div className="p-8">
+                <form className="space-y-5" autoComplete="off" onSubmit={handleSubmit}>
+                  {/* Name */}
                   <div>
-                    <h3 className="font-semibold mb-4">Review Your Details</h3>
-                    <ul className="space-y-2 text-gray-700">
-                      <li>
-                        <strong>Name:</strong> {formData.name}
-                      </li>
-                      <li>
-                        <strong>Email:</strong> {formData.email}
-                      </li>
-                      <li>
-                        <strong>Phone:</strong> {formData.phone}
-                      </li>
-                      <li>
-                        <strong>Course:</strong> {formData.course}
-                      </li>
-                      <li>
-                        <strong>ID Proof:</strong>{" "}
-                        {formData.idProof && (
-                          <>
-                            <span className="mr-2">
-                              {formData.idProof.name}
-                            </span>
-                            <a
-                              href={URL.createObjectURL(formData.idProof)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-blue-600 underline"
-                            >
-                              View
-                            </a>
-                          </>
-                        )}
-                      </li>
-                      <li>
-                        <strong>Marksheet:</strong>{" "}
-                        {formData.marksheet && (
-                          <a
-                            href={URL.createObjectURL(formData.marksheet)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 underline"
-                          >
-                            View Marksheet
-                          </a>
-                        )}
-                      </li>
-                      <li>
-                        <strong>Photo:</strong>{" "}
-                        {formData.photo && (
-                          <a
-                            href={URL.createObjectURL(formData.photo)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 underline"
-                          >
-                            View Photo
-                          </a>
-                        )}
-                      </li>
-                    </ul>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Full Name <span className="text-red-500">*</span></label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 outline-none transition ${errors.name ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                      placeholder="Enter your name"
+                    />
+                    {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
                   </div>
-                )}
 
-                {/* Navigation Buttons */}
-                <div className="flex justify-between pt-4">
-                  {step > 1 && (
-                    <button
-                      type="button"
-                      onClick={handlePrev}
-                      className="px-6 py-2 bg-gray-200 rounded-lg hover:bg-gray-300"
+                  {/* Email */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Email <span className="text-red-500">*</span></label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 outline-none transition ${errors.email ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                      placeholder="you@example.com"
+                    />
+                    {errors.email && <p className="text-red-500 text-xs mt-1">{errors.email}</p>}
+                  </div>
+
+                  {/* Phone */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Phone Number <span className="text-red-500">*</span></label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      maxLength="10"
+                      className={`w-full p-3 border rounded-xl focus:ring-2 focus:ring-pink-500 outline-none transition ${errors.phone ? "border-red-500 bg-red-50" : "border-gray-300"}`}
+                      placeholder="10-digit mobile number"
+                    />
+                    {errors.phone && <p className="text-red-500 text-xs mt-1">{errors.phone}</p>}
+                  </div>
+
+                  {/* Submit Button */}
+                  <div className="pt-4">
+                    <button 
+                      type="submit" 
+                      disabled={isSubmitting} 
+                      className="w-full py-3 bg-pink-600 text-white font-bold rounded-xl shadow-lg hover:bg-pink-700 hover:shadow-xl transition-all duration-300 flex items-center justify-center gap-2"
                     >
-                      Back
+                      {isSubmitting ? "Sending..." : "Submit Enquiry"} 
+                      {!isSubmitting && <FaPaperPlane />}
                     </button>
-                  )}
-                  {step < 3 ? (
-                    <button
-                      type="button"
-                      onClick={handleNext}
-                      className="ml-auto px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                    >
-                      Next
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={handleSubmit}
-                      className="ml-auto px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700"
-                    >
-                      Submit Application
-                    </button>
-                  )}
-                </div>
-              </form>
+                  </div>
+                </form>
+              </div>
             </motion.div>
           </motion.div>
         )}

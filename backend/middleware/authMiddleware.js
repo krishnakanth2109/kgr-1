@@ -2,33 +2,22 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const authMiddleware = (req, res, next) => {
-  // 1. Get token from header
+  // Get the token from the 'x-auth-token' header
   const token = req.header('x-auth-token');
 
-  // 2. Check if no token
+  // Check if a token does not exist
   if (!token) {
     return res.status(401).json({ message: 'No token, authorization denied' });
   }
 
-  // 3. Verify token
+  // Verify the token
   try {
+    // Decode the token to get the user payload
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-
-    // 4. Attach user to request object
-    // Handle specific student/admin payloads or generic user payload
-    if (decoded.student) {
-        req.student = decoded.student;
-        req.user = decoded.student; // Alias for generic routes
-    } else if (decoded.admin) {
-        req.admin = decoded.admin;
-        req.user = decoded.admin;   // Alias for generic routes
-    } else {
-        req.user = decoded.user || decoded;
-    }
-
-    next();
+    // Attach the user information to the request object
+    req.admin = decoded.admin;
+    next(); // Move on to the next function (the route handler)
   } catch (err) {
-    console.error("Auth Middleware Error:", err.message);
     res.status(401).json({ message: 'Token is not valid' });
   }
 };

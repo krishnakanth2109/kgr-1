@@ -1,40 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const { v2: cloudinary } = require('cloudinary');
 const Application = require('../models/Application');
 
-cloudinary.config({
-  cloud_name: process.env.CLOUD_NAME,
-  api_key: process.env.CLOUD_API_KEY,
-  api_secret: process.env.CLOUD_API_SECRET,
-});
-
+// POST: Submit Application (Name, Email, Phone only)
 router.post('/', async (req, res) => {
-  const { name, email, phone, course, idProof, marksheet, photo } = req.body;
+  const { name, email, phone } = req.body;
 
-  if (!name || !email || !phone || !course || !idProof || !marksheet || !photo) {
-    return res.status(400).json({ status: 'error', message: 'Missing required fields or files.' });
+  // Basic Server-side Validation
+  if (!name || !email || !phone) {
+    return res.status(400).json({ status: 'error', message: 'Please provide Name, Email, and Phone number.' });
   }
 
   try {
-    const idProofDataUri = `data:${idProof.mimeType};base64,${idProof.data}`;
-    const marksheetDataUri = `data:${marksheet.mimeType};base64,${marksheet.data}`;
-    const photoDataUri = `data:${photo.mimeType};base64,${photo.data}`;
-
-    const [idProofResult, marksheetResult, photoResult] = await Promise.all([
-      cloudinary.uploader.upload(idProofDataUri, { folder: 'admissions/id_proofs' }),
-      cloudinary.uploader.upload(marksheetDataUri, { folder: 'admissions/marksheets' }),
-      cloudinary.uploader.upload(photoDataUri, { folder: 'admissions/photos' }),
-    ]);
-
     const newApplication = new Application({
       name,
       email,
-      phone,
-      course,
-      idProof: idProofResult.secure_url,
-      marksheet: marksheetResult.secure_url,
-      photo: photoResult.secure_url,
+      phone
     });
 
     await newApplication.save();
@@ -43,6 +24,30 @@ router.post('/', async (req, res) => {
   } catch (error) {
     console.error('Error processing application:', error);
     res.status(500).json({ status: 'error', message: 'Server error while processing your application.' });
+  }
+});
+
+// GET: Fetch All Applications
+router.get('/', async (req, res) => {
+  try {
+    const applications = await Application.find().sort({ submissionDate: -1 });
+    res.json(applications);
+  } catch (error) {
+    console.error('Error fetching applications:', error);
+    res.status(500).json({ status: 'error', message: 'Failed to fetch applications' });
+  }
+});
+
+// DELETE: Remove Application
+router.delete('/:id', async (req, res) => {
+  try {
+    const app = await Application.findById(req.params.id);
+    if (!app) return res.status(404).json({ message: 'Application not found' });
+    
+    await Application.findByIdAndDelete(req.params.id);
+    res.json({ status: 'success', message: 'Application deleted successfully' });
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: 'Server Error' });
   }
 });
 

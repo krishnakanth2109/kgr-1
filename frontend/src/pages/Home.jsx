@@ -1,3 +1,4 @@
+
 import React, { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { 
@@ -69,14 +70,15 @@ const Home = () => {
     }
   };
 
-  // --- Theme: Light Magenta & Brown ---
+  // --- Theme: Magenta (Fuchsia) & Red ---
+  // Note: Tailwind uses 'fuchsia' for Magenta colors.
   const keyHighlights = [
-    { icon: <FaIndustry />, title: "Industry-aligned curriculum", color: "from-fuchsia-500 to-stone-500" },
-    { icon: <FaUserMd />, title: "Hands-on practical training", color: "from-pink-500 to-amber-600" },
-    { icon: <FaBriefcase />, title: "Experienced certified faculty", color: "from-stone-500 to-fuchsia-500" },
-    { icon: <FaCheckCircle />, title: "Dedicated placement support", color: "from-amber-600 to-pink-500" },
-    { icon: <FaBuilding />, title: "Modern labs & classrooms", color: "from-fuchsia-600 to-stone-600" },
-    { icon: <FaAward />, title: "Certified programs", color: "from-pink-600 to-amber-700" }
+    { icon: <FaIndustry />, title: "Industry-aligned curriculum", color: "from-fuchsia-600 to-red-600" },
+    { icon: <FaUserMd />, title: "Hands-on practical training", color: "from-red-500 to-pink-600" },
+    { icon: <FaBriefcase />, title: "Experienced certified faculty", color: "from-pink-600 to-fuchsia-600" },
+    { icon: <FaCheckCircle />, title: "Dedicated placement support", color: "from-red-600 to-fuchsia-500" },
+    { icon: <FaBuilding />, title: "Modern labs & classrooms", color: "from-fuchsia-700 to-red-700" },
+    { icon: <FaAward />, title: "Certified programs", color: "from-red-600 to-pink-700" }
   ];
 
   const testimonials = [
@@ -84,29 +86,29 @@ const Home = () => {
       name: "Priya Sharma",
       course: "MPHW Graduate",
       text: "The hands-on training and supportive faculty helped me secure a position at a leading hospital immediately after graduation.",
-      avatarColor: "bg-gradient-to-r from-fuchsia-500 to-stone-500"
+      avatarColor: "bg-gradient-to-r from-fuchsia-600 to-red-600"
     },
     {
       name: "Rahul Verma",
       course: "MLT Student",
       text: "The practical sessions in modern labs gave me the confidence and skills needed for my career in diagnostic centers.",
-      avatarColor: "bg-gradient-to-r from-stone-500 to-pink-500"
+      avatarColor: "bg-gradient-to-r from-red-600 to-pink-600"
     },
     {
       name: "Anjali Patel",
       course: "Vocational Graduate",
       text: "The placement assistance was exceptional. I received multiple job offers even before completing my course.",
-      avatarColor: "bg-gradient-to-r from-pink-500 to-amber-600"
+      avatarColor: "bg-gradient-to-r from-pink-600 to-red-700"
     }
   ];
 
   const facilities = [
-    { icon: <FaMicroscope />, title: "Modern Medical Labs", desc: "State-of-the-art diagnostic equipment", bg: "bg-gradient-to-br from-fuchsia-50 to-stone-100" },
-    { icon: <FaStethoscope />, title: "Clinical Training Centers", desc: "Real-world healthcare simulation", bg: "bg-gradient-to-br from-stone-100 to-pink-50" },
-    { icon: <FaHeartbeat />, title: "Patient Care Labs", desc: "Comprehensive patient handling training", bg: "bg-gradient-to-br from-pink-50 to-amber-50" },
-    { icon: <FaBookOpen />, title: "Digital Library", desc: "Extensive medical resources", bg: "bg-gradient-to-br from-fuchsia-50 to-stone-100" },
-    { icon: <FaUsers />, title: "Smart Classrooms", desc: "Interactive learning spaces", bg: "bg-gradient-to-br from-stone-100 to-pink-50" },
-    { icon: <FaGraduationCap />, title: "Career Center", desc: "Placement & counseling services", bg: "bg-gradient-to-br from-pink-50 to-amber-50" }
+    { icon: <FaMicroscope />, title: "Modern Medical Labs", desc: "State-of-the-art diagnostic equipment", bg: "bg-gradient-to-br from-fuchsia-50 to-red-50" },
+    { icon: <FaStethoscope />, title: "Clinical Training Centers", desc: "Real-world healthcare simulation", bg: "bg-gradient-to-br from-red-50 to-pink-50" },
+    { icon: <FaHeartbeat />, title: "Patient Care Labs", desc: "Comprehensive patient handling training", bg: "bg-gradient-to-br from-pink-50 to-fuchsia-50" },
+    { icon: <FaBookOpen />, title: "Digital Library", desc: "Extensive medical resources", bg: "bg-gradient-to-br from-fuchsia-50 to-red-50" },
+    { icon: <FaUsers />, title: "Smart Classrooms", desc: "Interactive learning spaces", bg: "bg-gradient-to-br from-red-50 to-pink-50" },
+    { icon: <FaGraduationCap />, title: "Career Center", desc: "Placement & counseling services", bg: "bg-gradient-to-br from-pink-50 to-fuchsia-50" }
   ];
 
   const courses = [
@@ -116,7 +118,7 @@ const Home = () => {
       description: "Comprehensive healthcare training focusing on patient care and medical procedures",
       duration: "2 Years",
       seats: "Limited Seats",
-      gradient: "from-fuchsia-600 via-pink-600 to-stone-600"
+      gradient: "from-fuchsia-600 via-pink-600 to-red-600"
     },
     {
       icon: <FaMicroscope />,
@@ -124,7 +126,7 @@ const Home = () => {
       description: "Advanced training in diagnostic procedures and lab management",
       duration: "2 Years",
       seats: "Limited Seats",
-      gradient: "from-stone-600 via-amber-700 to-pink-600"
+      gradient: "from-red-600 via-rose-600 to-fuchsia-600"
     }
   ];
 
@@ -133,23 +135,22 @@ const Home = () => {
       title: "Admission Open for 2024", 
       date: "March 1, 2024", 
       category: "Admission",
-      gradient: "from-fuchsia-500 to-stone-500"
+      gradient: "from-fuchsia-500 to-red-500"
     },
     { 
       title: "New Lab Equipment Installation", 
       date: "Feb 28, 2024", 
       category: "Facilities",
-      gradient: "from-stone-500 to-pink-500"
+      gradient: "from-red-500 to-pink-500"
     },
     { 
       title: "Healthcare Workshop", 
       date: "Feb 25, 2024", 
       category: "Events",
-      gradient: "from-pink-500 to-amber-600"
+      gradient: "from-pink-500 to-fuchsia-600"
     }
   ];
 
-  // Specific Gallery Images configuration
   const galleryImages = [
     {
       id: 1,
@@ -172,8 +173,8 @@ const Home = () => {
   ];
 
   return (
-    // Base Background: Very Light Stone/Pinkish White for the "Light" feel
-    <div className="min-h-screen bg-[#fafaf9] text-stone-800">
+    // Base Background: Very Light Rose/White
+    <div className="min-h-screen bg-[#fffafa] text-stone-800">
       
       {/* 
         ================================================================
@@ -193,12 +194,15 @@ const Home = () => {
             alt="KGR College Texture Background"
             className="w-full h-full object-cover"
           />
-          {/* Overlay to ensure text readability - Using theme colors (Dark Magenta/Brown tint) */}
+          {/* 
+             Overlay Change: Magenta to Red Theme
+             Using fuchsia-600 to red-600 gradient mix
+          */}
           <div className="absolute inset-0 bg-gradient-to-r 
-from-[#ff66cc]/80 
-via-[#cc3399]/70 
-to-[#691B32]/80 
-mix-blend-multiply"></div>
+            from-fuchsia-600/90 
+            via-pink-600/80 
+            to-red-600/90 
+            mix-blend-multiply"></div>
         </div>
 
         {/* Content */}
@@ -210,11 +214,11 @@ mix-blend-multiply"></div>
            
             <h1 className="text-5xl md:text-7xl font-black leading-tight tracking-tight drop-shadow-2xl mb-6">
               Welcome to{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-200 via-pink-200 to-stone-200">
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-200 via-pink-200 to-red-200">
                 KGR College
               </span>
             </h1>
-            <p className="text-xl md:text-2xl text-fuchsia-50 max-w-2xl font-medium leading-relaxed mb-10 drop-shadow-md">
+            <p className="text-xl md:text-2xl text-pink-50 max-w-2xl font-medium leading-relaxed mb-10 drop-shadow-md">
               Shaping the future of students who aspire to build careers in healthcare through excellence in vocational education.
             </p>
             
@@ -225,17 +229,17 @@ mix-blend-multiply"></div>
               <motion.div variants={scaleIn}>
                 <Link
                   to="/admissions"
-                  className="px-10 py-4 bg-white text-fuchsia-900 font-black rounded-full shadow-2xl 
-                  hover:bg-fuchsia-50 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] 
+                  className="px-10 py-4 bg-white text-red-900 font-black rounded-full shadow-2xl 
+                  hover:bg-red-50 transition-all duration-300 hover:scale-110 hover:shadow-[0_0_40px_rgba(255,255,255,0.5)] 
                   transform hover:-translate-y-1 text-lg flex items-center gap-2"
                 >
-                  Apply Now <FaCheckCircle className="text-fuchsia-600"/>
+                  Apply Now <FaCheckCircle className="text-red-600"/>
                 </Link>
               </motion.div>
               <motion.div variants={scaleIn}>
                 <Link
                   to="/courses"
-                  className="px-10 py-4 border-2 border-fuchsia-200 text-white rounded-full font-bold
+                  className="px-10 py-4 border-2 border-red-200 text-white rounded-full font-bold
                   hover:bg-white/10 transition-all duration-300 backdrop-blur-sm
                   hover:scale-110 hover:shadow-2xl transform hover:-translate-y-1 text-lg flex items-center gap-2"
                 >
@@ -247,10 +251,10 @@ mix-blend-multiply"></div>
         </div>
         
         {/* Decorative Bottom Curve */}
-        <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-[#fafaf9] to-transparent z-20"></div>
+        <div className="absolute bottom-0 w-full h-24 bg-gradient-to-t from-[#fffafa] to-transparent z-20"></div>
       </motion.section>
 
-      {/* SECTION: HERO QUOTE (Light BG) */}
+      {/* SECTION: HERO QUOTE */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
@@ -261,7 +265,7 @@ mix-blend-multiply"></div>
         <div className="max-w-5xl mx-auto px-6 text-center">
           <motion.h2 
             variants={scaleIn}
-            className="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-fuchsia-700 to-stone-600 bg-clip-text text-transparent"
+            className="text-4xl md:text-5xl font-black mb-6 bg-gradient-to-r from-fuchsia-700 to-red-600 bg-clip-text text-transparent"
           >
             "Shaping Skills for a Successful Career"
           </motion.h2>
@@ -275,16 +279,16 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: ABOUT (Light Pinkish/Stone BG) */}
+      {/* SECTION: ABOUT */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerContainer}
-        className="py-28 px-6 max-w-7xl mx-auto bg-gradient-to-b from-white to-[#fdf4ff]"
+        className="py-28 px-6 max-w-7xl mx-auto bg-gradient-to-b from-white to-[#fff0f5]"
       >
         <motion.div variants={fadeInUp} className="text-center mb-20">
-          <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-fuchsia-800 to-stone-700 bg-clip-text text-transparent">
+          <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-fuchsia-800 to-red-700 bg-clip-text text-transparent">
             About Our College
           </h2>
           <p className="text-xl text-stone-600 leading-relaxed max-w-5xl mx-auto">
@@ -299,7 +303,7 @@ mix-blend-multiply"></div>
               whileHover={{ scale: 1.02 }}
               className="relative group"
             >
-              <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-400 to-amber-400 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
+              <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-400 to-red-400 rounded-3xl blur-xl opacity-30 group-hover:opacity-50 transition-opacity"></div>
               <img
                 src="https://img.freepik.com/free-photo/smiling-doctor-with-stethoscope_23-2147896180.jpg"
                 alt="Doctor representing healthcare education"
@@ -320,8 +324,8 @@ mix-blend-multiply"></div>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link
                 to="/about"
-                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-fuchsia-600 to-stone-600 text-white font-bold rounded-2xl shadow-xl 
-                hover:from-fuchsia-700 hover:to-stone-700 transition-all duration-300 hover:shadow-2xl group"
+                className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-fuchsia-600 to-red-600 text-white font-bold rounded-2xl shadow-xl 
+                hover:from-fuchsia-700 hover:to-red-700 transition-all duration-300 hover:shadow-2xl group"
               >
                 <span>Learn More</span>
                 <motion.span
@@ -337,17 +341,17 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: COURSES (White Cards with Magenta/Brown Borders) */}
+      {/* SECTION: COURSES */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerContainer}
-        className="py-28 bg-[#fafaf9]"
+        className="py-28 bg-[#fffafa]"
       >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-stone-700 to-fuchsia-700 bg-clip-text text-transparent">
+            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-red-700 to-fuchsia-700 bg-clip-text text-transparent">
               Job-Oriented Vocational Courses
             </h2>
             <p className="text-xl text-stone-600 max-w-4xl mx-auto">
@@ -364,17 +368,17 @@ mix-blend-multiply"></div>
                 whileHover={{ y: -10 }}
                 className={`relative group overflow-hidden rounded-3xl bg-white p-1 shadow-xl`}
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-100 to-stone-100 opacity-50"></div>
-                <div className="relative rounded-3xl p-10 h-full border border-fuchsia-100">
+                <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-100 to-red-100 opacity-50"></div>
+                <div className="relative rounded-3xl p-10 h-full border border-pink-100">
                   <div className="flex items-start justify-between mb-8">
-                    <div className="text-5xl bg-gradient-to-r from-fuchsia-600 to-stone-600 bg-clip-text text-transparent">
+                    <div className="text-5xl bg-gradient-to-r from-fuchsia-600 to-red-600 bg-clip-text text-transparent">
                       {course.icon}
                     </div>
                     <div className="flex gap-3">
                       <span className="px-4 py-2 bg-fuchsia-50 rounded-full text-sm font-semibold text-fuchsia-700 border border-fuchsia-200">
                         {course.duration}
                       </span>
-                      <span className="px-4 py-2 bg-stone-100 rounded-full text-sm font-semibold text-stone-700 border border-stone-200">
+                      <span className="px-4 py-2 bg-red-50 rounded-full text-sm font-semibold text-red-700 border border-red-200">
                         {course.seats}
                       </span>
                     </div>
@@ -390,8 +394,8 @@ mix-blend-multiply"></div>
                   <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                     <Link
                       to="/courses"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-stone-600 rounded-xl 
-                      text-white font-semibold hover:from-fuchsia-700 hover:to-stone-700 transition-all duration-300"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-red-600 rounded-xl 
+                      text-white font-semibold hover:from-fuchsia-700 hover:to-red-700 transition-all duration-300"
                     >
                       <span>Course Details</span>
                       <motion.span
@@ -410,17 +414,17 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: HIGHLIGHTS (Light Gradient BG) */}
+      {/* SECTION: HIGHLIGHTS */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerContainer}
-        className="py-28 bg-gradient-to-br from-fuchsia-50 via-white to-stone-100"
+        className="py-28 bg-gradient-to-br from-fuchsia-50 via-white to-red-50"
       >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-stone-700 to-fuchsia-700 bg-clip-text text-transparent">
+            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-red-700 to-fuchsia-700 bg-clip-text text-transparent">
               Why Choose Our College?
             </h2>
             <p className="text-xl text-stone-600 max-w-3xl mx-auto">
@@ -436,13 +440,13 @@ mix-blend-multiply"></div>
                 whileHover={{ scale: 1.05, rotateY: 10 }}
                 className="group relative"
               >
-                <div className="absolute -inset-1 bg-gradient-to-r from-fuchsia-200 to-stone-200 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
-                <div className="relative bg-white rounded-2xl p-8 border border-fuchsia-100 shadow-lg">
+                <div className="absolute -inset-1 bg-gradient-to-r from-fuchsia-200 to-red-200 rounded-2xl blur opacity-30 group-hover:opacity-60 transition duration-500"></div>
+                <div className="relative bg-white rounded-2xl p-8 border border-pink-100 shadow-lg">
                   <div className={`inline-flex p-4 rounded-xl bg-gradient-to-r ${item.color} mb-6 group-hover:scale-110 transition-transform duration-300`}>
                     <div className="text-2xl text-white">{item.icon}</div>
                   </div>
                   <h3 className="text-xl font-bold text-stone-800 mb-3">{item.title}</h3>
-                  <div className="h-1 w-0 group-hover:w-full bg-gradient-to-r from-fuchsia-400 to-stone-400 transition-all duration-500 rounded-full mb-4"></div>
+                  <div className="h-1 w-0 group-hover:w-full bg-gradient-to-r from-fuchsia-400 to-red-400 transition-all duration-500 rounded-full mb-4"></div>
                   <p className="text-stone-600 text-sm">
                     Comprehensive support and training for career success
                   </p>
@@ -453,18 +457,18 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: PLACEMENT (Light Stone/Brown BG) */}
+      {/* SECTION: PLACEMENT */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerContainer}
-        className="py-28 bg-[#f5f5f4]"
+        className="py-28 bg-[#fdf2f8]"
       >
         <div className="max-w-7xl mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <motion.div variants={slideIn} className="space-y-10">
-              <h2 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-amber-700 to-stone-700 bg-clip-text text-transparent">
+              <h2 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-red-700 to-fuchsia-800 bg-clip-text text-transparent">
                 Building Your Professional Future
               </h2>
               <p className="text-lg text-stone-600 leading-relaxed">
@@ -474,14 +478,14 @@ mix-blend-multiply"></div>
               
               <motion.div 
                 whileHover={{ scale: 1.02 }}
-                className="bg-white rounded-2xl p-8 border border-stone-200 shadow-xl"
+                className="bg-white rounded-2xl p-8 border border-pink-200 shadow-xl"
               >
                 <h3 className="text-2xl font-bold text-stone-800 mb-4 flex items-center gap-3">
-                  <FaChartLine className="text-amber-600" />
+                  <FaChartLine className="text-red-600" />
                   Placement Success
                 </h3>
                 <div className="flex items-center gap-4">
-                  <div className="text-6xl font-black text-amber-600">95%</div>
+                  <div className="text-6xl font-black text-red-600">95%</div>
                   <div className="text-stone-600">
                     of our graduates secure employment within 3 months of completing their vocational training
                   </div>
@@ -490,9 +494,9 @@ mix-blend-multiply"></div>
             </motion.div>
             
             <motion.div variants={scaleIn} className="relative">
-              <div className="absolute -ins-4 bg-gradient-to-r from-amber-200 to-stone-200 rounded-3xl blur-2xl opacity-40"></div>
-              <div className="relative bg-white rounded-3xl p-10 border border-stone-200 shadow-xl">
-                <h3 className="text-3xl font-bold text-center mb-10 bg-gradient-to-r from-amber-700 to-stone-700 bg-clip-text text-transparent">
+              <div className="absolute -ins-4 bg-gradient-to-r from-red-200 to-fuchsia-200 rounded-3xl blur-2xl opacity-40"></div>
+              <div className="relative bg-white rounded-3xl p-10 border border-pink-200 shadow-xl">
+                <h3 className="text-3xl font-bold text-center mb-10 bg-gradient-to-r from-red-700 to-fuchsia-700 bg-clip-text text-transparent">
                   Career Support Services
                 </h3>
                 <div className="grid grid-cols-2 gap-6">
@@ -501,10 +505,10 @@ mix-blend-multiply"></div>
                     <motion.div
                       key={idx}
                       whileHover={{ scale: 1.05 }}
-                      className="bg-stone-50 rounded-xl p-6 border border-stone-200 
-                      hover:border-amber-400 transition-all duration-300 group cursor-pointer"
+                      className="bg-red-50 rounded-xl p-6 border border-pink-200 
+                      hover:border-fuchsia-400 transition-all duration-300 group cursor-pointer"
                     >
-                      <div className="text-2xl text-amber-600 mb-3 group-hover:scale-110 transition-transform">
+                      <div className="text-2xl text-red-600 mb-3 group-hover:scale-110 transition-transform">
                         <FaCheckCircle />
                       </div>
                       <h4 className="text-stone-800 font-semibold">{service}</h4>
@@ -517,7 +521,7 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: FACILITIES (White/Pink Grid) */}
+      {/* SECTION: FACILITIES */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
@@ -527,7 +531,7 @@ mix-blend-multiply"></div>
       >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-fuchsia-700 to-pink-600 bg-clip-text text-transparent">
+            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-fuchsia-700 to-red-600 bg-clip-text text-transparent">
               Campus Facilities
             </h2>
             <p className="text-xl text-stone-600 max-w-3xl mx-auto">
@@ -542,12 +546,12 @@ mix-blend-multiply"></div>
                 variants={scaleIn}
                 whileHover={{ scale: 1.05, rotate: [0, 5, -5, 0] }}
                 transition={{ rotate: { duration: 0.5 } }}
-                className={`${facility.bg} rounded-2xl p-8 border border-fuchsia-100 
+                className={`${facility.bg} rounded-2xl p-8 border border-pink-100 
                 shadow-lg hover:shadow-2xl transition-all duration-500 group`}
               >
                 <div className="relative mb-6">
-                  <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-200 to-pink-200 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
-                  <div className="relative text-4xl bg-gradient-to-r from-fuchsia-600 to-pink-600 bg-clip-text text-transparent">
+                  <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-200 to-red-200 rounded-2xl blur-lg opacity-0 group-hover:opacity-40 transition-opacity duration-500"></div>
+                  <div className="relative text-4xl bg-gradient-to-r from-fuchsia-600 to-red-600 bg-clip-text text-transparent">
                     {facility.icon}
                   </div>
                 </div>
@@ -555,24 +559,24 @@ mix-blend-multiply"></div>
                   {facility.title}
                 </h3>
                 <p className="text-stone-600">{facility.desc}</p>
-                <div className="h-1 w-0 group-hover:w-full bg-gradient-to-r from-fuchsia-400 to-pink-400 transition-all duration-500 rounded-full mt-6"></div>
+                <div className="h-1 w-0 group-hover:w-full bg-gradient-to-r from-fuchsia-400 to-red-400 transition-all duration-500 rounded-full mt-6"></div>
               </motion.div>
             ))}
           </div>
         </div>
       </motion.section>
 
-      {/* SECTION: TESTIMONIALS (Light Stone BG) */}
+      {/* SECTION: TESTIMONIALS */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
         viewport={{ once: true }}
         variants={staggerContainer}
-        className="py-28 bg-[#fafaf9]"
+        className="py-28 bg-[#fffafa]"
       >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-stone-700 to-fuchsia-800 bg-clip-text text-transparent">
+            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-red-700 to-fuchsia-800 bg-clip-text text-transparent">
               What Our Students Say
             </h2>
             <p className="text-xl text-stone-600 max-w-3xl mx-auto">
@@ -596,8 +600,8 @@ mix-blend-multiply"></div>
                 whileHover={{ scale: 1.05, rotateY: 10 }}
                 className="relative group"
               >
-                <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-200 to-stone-300 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-                <div className="relative bg-white rounded-3xl p-10 border border-stone-200 shadow-xl">
+                <div className="absolute -inset-4 bg-gradient-to-r from-fuchsia-200 to-red-300 rounded-3xl blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative bg-white rounded-3xl p-10 border border-pink-200 shadow-xl">
                   <div className="flex items-center mb-8">
                     <motion.div
                       whileHover={{ scale: 1.1 }}
@@ -622,7 +626,7 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: NEWS (White with Brown Accents) */}
+      {/* SECTION: NEWS */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
@@ -632,8 +636,8 @@ mix-blend-multiply"></div>
       >
         <div className="max-w-5xl mx-auto px-6">
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-fuchsia-700 to-amber-700 bg-clip-text text-transparent flex items-center justify-center gap-4">
-              <FaComments className="text-amber-600" />
+            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-fuchsia-700 to-red-700 bg-clip-text text-transparent flex items-center justify-center gap-4">
+              <FaComments className="text-red-600" />
               Latest Updates & Notifications
             </h2>
             <p className="text-xl text-stone-600 max-w-3xl mx-auto">
@@ -650,13 +654,13 @@ mix-blend-multiply"></div>
                 className="relative pl-12 group cursor-pointer"
               >
                 {/* Timeline line */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-fuchsia-400 to-stone-400 rounded-full"></div>
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-fuchsia-400 to-red-400 rounded-full"></div>
                 
                 {/* Timeline dot */}
                 <div className={`absolute left-0 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gradient-to-r ${item.gradient} shadow-lg 
                   group-hover:scale-150 transition-transform duration-300`}></div>
                 
-                <div className="bg-stone-50 backdrop-blur-sm rounded-2xl p-8 border border-stone-200 
+                <div className="bg-stone-50 backdrop-blur-sm rounded-2xl p-8 border border-pink-200 
                   hover:border-fuchsia-300 transition-all duration-500 shadow-lg hover:shadow-xl">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
                     <h3 className="text-2xl font-bold text-stone-800 group-hover:text-fuchsia-700 transition-all">
@@ -678,7 +682,7 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: GALLERY (Darker background for contrast) */}
+      {/* SECTION: GALLERY */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
@@ -688,7 +692,7 @@ mix-blend-multiply"></div>
       >
         <div className="max-w-7xl mx-auto px-6">
           <motion.div variants={fadeInUp} className="text-center mb-20">
-            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-stone-200 to-fuchsia-200 bg-clip-text text-transparent flex items-center justify-center gap-4">
+            <h2 className="text-5xl md:text-6xl font-black mb-8 bg-gradient-to-r from-red-200 to-fuchsia-200 bg-clip-text text-transparent flex items-center justify-center gap-4">
               <FaImages className="text-fuchsia-300" />
               Campus Life & Activities
             </h2>
@@ -722,7 +726,7 @@ mix-blend-multiply"></div>
         </div>
       </motion.section>
 
-      {/* SECTION: CONTACT CTA (Return to Magenta/Brown Gradient) */}
+      {/* SECTION: CONTACT CTA */}
       <motion.section 
         initial="hidden"
         whileInView="visible"
@@ -730,8 +734,8 @@ mix-blend-multiply"></div>
         variants={scaleIn}
         className="py-28 relative overflow-hidden"
       >
-        {/* Animated background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-[#d946ef] via-[#a21caf] to-[#78350f]">
+        {/* Animated background: Magenta to Red Gradient */}
+        <div className="absolute inset-0 bg-gradient-to-r from-fuchsia-600 via-pink-600 to-red-600">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.2),transparent_50%)]"></div>
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_70%_80%,rgba(0,0,0,0.2),transparent_50%)]"></div>
         </div>
@@ -746,7 +750,7 @@ mix-blend-multiply"></div>
           
           <motion.p 
             variants={fadeInUp}
-            className="text-2xl text-fuchsia-50 mb-16 max-w-3xl mx-auto leading-relaxed"
+            className="text-2xl text-pink-50 mb-16 max-w-3xl mx-auto leading-relaxed"
           >
             Have questions about admissions, courses, or campus details? Reach out to us anytime.
             Our team is here to guide you through every step of your vocational journey.
@@ -758,7 +762,7 @@ mix-blend-multiply"></div>
           >
             <Link
               to="/contact"
-              className="inline-flex items-center gap-4 px-12 py-6 bg-white text-fuchsia-900 font-black rounded-3xl shadow-2xl hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] 
+              className="inline-flex items-center gap-4 px-12 py-6 bg-white text-red-900 font-black rounded-3xl shadow-2xl hover:shadow-[0_0_60px_rgba(255,255,255,0.4)] 
               transition-all duration-500 text-2xl group relative overflow-hidden"
             >
               <span className="relative z-10">Contact Us Today</span>

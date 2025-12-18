@@ -139,7 +139,7 @@ const StudentFeeManager = () => {
                         </div>
                     </div>
                     <div className="flex bg-gray-100 p-1 rounded-lg">
-                        {['fees', 'documents'].map(tab => (
+                        {['documents'].map(tab => (
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
@@ -152,50 +152,7 @@ const StudentFeeManager = () => {
                 </div>
 
                 {/* --- FEES TAB --- */}
-                {activeTab === 'fees' && (
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-fade-in">
-                        {/* Year 1 */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                            <h2 className="font-bold text-lg text-blue-800 border-b pb-2">1st Year Fees</h2>
-                            <FeeInput year="year1" field="admissionFee" label="Admission Fee" />
-                            <FeeInput year="year1" field="collegeFee" label="College Fee" />
-                            <FeeInput year="year1" field="hostelFee" label="Hostel Fee" />
-                            <FeeInput year="year1" field="scholarship" label="Scholarship" />
-                            <FeeInput year="year1" field="booksFee" label="Books Fee" />
-                            <FeeInput year="year1" field="uniformFee" label="Uniform Fee" />
-                            <FeeInput year="year1" field="clinicalFee" label="Clinical Fee" />
-                            <FeeInput year="year1" field="cautionDeposit" label="Caution Deposit" />
-                            <FeeInput year="year1" field="busFee" label="Bus Fee" />
-                        </div>
-                        {/* Year 2 */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                            <h2 className="font-bold text-lg text-green-800 border-b pb-2">2nd Year Fees</h2>
-                            <FeeInput year="year2" field="collegeFee" label="College Fee" />
-                            <FeeInput year="year2" field="hostelFee" label="Hostel Fee" />
-                            <FeeInput year="year2" field="scholarship" label="Scholarship" />
-                            <FeeInput year="year2" field="booksFee" label="Books Fee" />
-                            <FeeInput year="year2" field="clinicalFee" label="Clinical Fee" />
-                            <FeeInput year="year2" field="cautionDeposit" label="Caution Deposit" />
-                            <FeeInput year="year2" field="busFee" label="Bus Fee" />
-                        </div>
-                        {/* Year 3 */}
-                        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 space-y-4">
-                            <h2 className="font-bold text-lg text-purple-800 border-b pb-2">3rd Year Fees</h2>
-                            <FeeInput year="year3" field="collegeFee" label="College Fee" />
-                            <FeeInput year="year3" field="hostelFee" label="Hostel Fee" />
-                            <FeeInput year="year3" field="scholarship" label="Scholarship" />
-                            <FeeInput year="year3" field="booksFee" label="Books Fee" />
-                            <FeeInput year="year3" field="uniformFee" label="Uniform Fee" />
-                            <FeeInput year="year3" field="clinicalFee" label="Clinical Fee" />
-                            <FeeInput year="year3" field="busFee" label="Bus Fee" />
-                        </div>
-                        <div className="col-span-full flex justify-end">
-                            <button onClick={handleSaveFees} disabled={saving} className="bg-blue-600 text-white px-8 py-3 rounded-xl hover:bg-blue-700 flex items-center gap-2">
-                                {saving ? <Loader2 className="animate-spin" /> : <Save />} Save Fees
-                            </button>
-                        </div>
-                    </div>
-                )}
+               
 
                 {/* --- DOCUMENTS TAB --- */}
                 {activeTab === 'documents' && (

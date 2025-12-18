@@ -116,9 +116,7 @@ const FacultyProfilePage = () => {
                 <DetailItem label="Gender" value={faculty.gender} />
                 <DetailItem label="Email Address" value={faculty.email} />
                 <DetailItem label="Phone Number" value={faculty.phone_number} />
-                 <div className="md:col-span-3">
-                    <DetailItem label="Address" value={`${faculty.address?.address_line1 || ''}, ${faculty.address?.city || ''}, ${faculty.address?.state || ''} - ${faculty.address?.postal_code || ''}`} />
-                 </div>
+              
             </ProfileSection>
         </div>
     );
