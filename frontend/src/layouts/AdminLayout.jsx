@@ -84,9 +84,11 @@ const AdminLayout = () => {
             <Layers size={20} />
             {!isCollapsed && <span>Fee Structure</span>}
           </Link>
-          <Link to="/admin/fees/mapping" className={linkClass('/admin/fees/mapping')}>
+          
+          {/* UPDATED LINK PATH */}
+          <Link to="/admin/fees/generator" className={linkClass('/admin/fees/generator')}>
             <LinkIcon size={20} />
-            {!isCollapsed && <span>Student Fee Mapping</span>}
+            {!isCollapsed && <span>Student Fee Generator</span>}
           </Link>
       
           <Link to="/admin/fees/reports" className={linkClass('/admin/fees/reports')}>

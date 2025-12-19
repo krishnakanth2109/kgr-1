@@ -38,7 +38,10 @@ const AdminAdmissions = lazy(() => import("../pages/admin/AdminAdmissions"));
 // Admin Fee Management
 const FeeDashboard = lazy(() => import("../pages/admin/fees/FeeDashboard"));
 const FeeStructure = lazy(() => import("../pages/admin/fees/FeeStructure"));
-const StudentFeeMapping = lazy(() => import("../pages/admin/fees/StudentFeeMapping"));
+
+// UPDATED IMPORT NAME
+const StudentFeeGenerator = lazy(() => import("../pages/admin/fees/StudentFeeGenerator"));
+
 const PendingDues = lazy(() => import("../pages/admin/fees/PendingDues"));
 const FeeReports = lazy(() => import("../pages/admin/fees/FeeReports"));
 
@@ -122,7 +125,10 @@ const AppRoutes = () => {
           {/* Fee Management System */}
           <Route path="fees/dashboard" element={<FeeDashboard />} />
           <Route path="fees/structure" element={<FeeStructure />} />
-          <Route path="fees/mapping" element={<StudentFeeMapping />} />
+          
+          {/* UPDATED ROUTE PATH */}
+          <Route path="fees/generator" element={<StudentFeeGenerator />} />
+          
           <Route path="fees/dues" element={<PendingDues />} />
           <Route path="fees/reports" element={<FeeReports />} />
           
