@@ -1,12 +1,13 @@
+// --- START OF FILE backend/routes/admissions.js ---
+
 const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
 
-// POST: Submit Application (Name, Email, Phone only)
+// POST: Submit Application
 router.post('/', async (req, res) => {
-  const { name, email, phone } = req.body;
+  const { name, email, phone, course } = req.body;
 
-  // Basic Server-side Validation
   if (!name || !email || !phone) {
     return res.status(400).json({ status: 'error', message: 'Please provide Name, Email, and Phone number.' });
   }
@@ -15,7 +16,9 @@ router.post('/', async (req, res) => {
     const newApplication = new Application({
       name,
       email,
-      phone
+      phone,
+      course, // Optional
+      status: 'Pending' // Default status
     });
 
     await newApplication.save();
@@ -35,6 +38,32 @@ router.get('/', async (req, res) => {
   } catch (error) {
     console.error('Error fetching applications:', error);
     res.status(500).json({ status: 'error', message: 'Failed to fetch applications' });
+  }
+});
+
+// PUT: Update Application Status (NEW)
+router.put('/:id', async (req, res) => {
+  const { status } = req.body;
+
+  // Validate status
+  const validStatuses = ['Pending', 'Interested', 'Not Interested'];
+  if (!status || !validStatuses.includes(status)) {
+    return res.status(400).json({ message: 'Invalid status value' });
+  }
+
+  try {
+    const app = await Application.findByIdAndUpdate(
+      req.params.id, 
+      { status: status },
+      { new: true } // Return the updated document
+    );
+
+    if (!app) return res.status(404).json({ message: 'Application not found' });
+
+    res.json({ status: 'success', data: app });
+  } catch (error) {
+    console.error("Update Error:", error);
+    res.status(500).json({ message: 'Server Error' });
   }
 });
 

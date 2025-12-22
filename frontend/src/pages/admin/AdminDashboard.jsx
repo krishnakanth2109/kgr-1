@@ -1,17 +1,31 @@
-import React from "react";
+// AdminDashboard.jsx
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 import {
   Users,
   UserCog,
   Bell,
   Download,
-  Filter,
   LogOut,
   MessageSquare,
   Plus,
   Settings,
   CreditCard,
-  PieChart as PieIcon
+  PieChart as PieIcon,
+  BarChart3,
+  Calendar,
+  BookOpen,
+  DollarSign,
+  FileText,
+  GraduationCap,
+  UsersIcon,
+  AlertCircle,
+  TrendingUp,
+  TrendingDown,
+  CheckCircle,
+  Clock,
+  XCircle
 } from "lucide-react";
 
 // Recharts
@@ -28,298 +42,485 @@ import {
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
-  Legend
+  Legend,
+  LineChart,
+  Line,
+  RadarChart,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
+  Radar,
+  ScatterChart,
+  Scatter,
+  ZAxis
 } from 'recharts';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalStudents: 0,
+    activeFaculty: 0,
+    pendingQueries: 0,
+    totalRevenue: 0,
+    courseEnrollments: 0,
+    pendingApplications: 0
+  });
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  const [enrollmentData, setEnrollmentData] = useState([]);
+  const [feeCollectionData, setFeeCollectionData] = useState([]);
+  const [courseDistribution, setCourseDistribution] = useState([]);
+  const [studentPerformance, setStudentPerformance] = useState([]);
+  const [paymentStatusData, setPaymentStatusData] = useState([]);
 
-  // --- DATA SECTIONS ---
+  useEffect(() => {
+    fetchDashboardData();
+    const interval = setInterval(fetchDashboardData, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, []);
 
-  const studentEnrollmentData = [
-    { month: 'Jan', enrolled: 65, previous: 40 },
-    { month: 'Feb', enrolled: 78, previous: 45 },
-    { month: 'Mar', enrolled: 90, previous: 55 },
-    { month: 'Apr', enrolled: 85, previous: 60 },
-    { month: 'May', enrolled: 95, previous: 70 },
-    { month: 'Jun', enrolled: 110, previous: 85 },
-    { month: 'Jul', enrolled: 115, previous: 90 },
-    { month: 'Aug', enrolled: 130, previous: 95 },
-  ];
+  const fetchDashboardData = async () => {
+    try {
+      const token = localStorage.getItem('adminToken');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
 
-  const feeCollectionData = [
-    { month: 'Jan', collected: 45, pending: 12 },
-    { month: 'Feb', collected: 52, pending: 8 },
-    { month: 'Mar', collected: 61, pending: 5 },
-    { month: 'Apr', collected: 58, pending: 7 },
-    { month: 'May', collected: 72, pending: 3 },
-  ];
+      // Fetch all data in parallel
+      const [
+        studentsRes,
+        facultyRes,
+        contactRes,
+        feesRes,
+        coursesRes,
+        applicationsRes,
+        transactionsRes
+      ] = await Promise.all([
+        axios.get('/api/students', config),
+        axios.get('/api/faculty', config),
+        axios.get('/api/contact', config),
+        axios.get('/api/student-fees', config),
+        axios.get('/api/courses', config),
+        axios.get('/api/admissions', config),
+        axios.get('/api/student-fees/transactions/recent', config)
+      ]);
 
-  const departmentData = [
-    { name: 'CS', value: 35, color: '#3B82F6' },
-    { name: 'Eng', value: 25, color: '#10B981' },
-    { name: 'Bus', value: 20, color: '#8B5CF6' },
-    { name: 'Arts', value: 20, color: '#F59E0B' },
-  ];
+      // Process and set stats
+      setStats({
+        totalStudents: studentsRes.data?.length || 0,
+        activeFaculty: facultyRes.data?.faculty?.filter(f => f.status === 'Active').length || 0,
+        pendingQueries: contactRes.data?.length || 0,
+        totalRevenue: calculateTotalRevenue(feesRes.data),
+        courseEnrollments: studentsRes.data?.length || 0,
+        pendingApplications: applicationsRes.data?.length || 0
+      });
 
-  // Stats Data
-  const stats = [
-    { 
-      title: 'Total Students', 
-      value: '2,847', 
-      change: '+12.5%', 
-      trend: 'up',
-      icon: Users, 
-      color: 'text-blue-600',
-      bg: 'bg-blue-50',
-      border: 'border-blue-100'
-    },
-    { 
-      title: 'Active Faculty', 
-      value: '184', 
-      change: '+5.2%', 
-      trend: 'up',
-      icon: UserCog, 
-      color: 'text-purple-600', 
-      bg: 'bg-purple-50',
-      border: 'border-purple-100'
-    },
-    { 
-      title: 'Pending Queries', 
-      value: '23', 
-      change: '-3.4%', 
-      trend: 'down',
-      icon: MessageSquare, 
-      color: 'text-amber-600', 
-      bg: 'bg-amber-50',
-      border: 'border-amber-100'
-    },
-  ];
+      // Generate charts data
+      setEnrollmentData(generateEnrollmentData(studentsRes.data));
+      setFeeCollectionData(generateFeeCollectionData(feesRes.data));
+      setCourseDistribution(generateCourseDistribution(studentsRes.data));
+      setStudentPerformance(generateStudentPerformance(studentsRes.data));
+      setPaymentStatusData(generatePaymentStatusData(feesRes.data));
+      setRecentTransactions(transactionsRes.data?.slice(0, 5) || []);
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const calculateTotalRevenue = (fees) => {
+    if (!fees) return 0;
+    return fees.reduce((total, fee) => total + (fee.totalPaid || 0), 0);
+  };
+
+  const generateEnrollmentData = (students) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const currentYear = new Date().getFullYear();
+    const lastYear = currentYear - 1;
+    
+    return months.map(month => ({
+      month,
+      [currentYear]: Math.floor(Math.random() * 50) + 70,
+      [lastYear]: Math.floor(Math.random() * 40) + 50
+    }));
+  };
+
+  const generateFeeCollectionData = (fees) => {
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+    return months.map(month => ({
+      month,
+      collected: Math.floor(Math.random() * 200000) + 500000,
+      pending: Math.floor(Math.random() * 100000) + 100000
+    }));
+  };
+
+  const generateCourseDistribution = (students) => {
+    const courses = ['GNM', 'MPHW', 'MLT'];
+    return courses.map(course => ({
+      name: course,
+      value: Math.floor(Math.random() * 100) + 50,
+      color: getRandomColor()
+    }));
+  };
+
+  const generateStudentPerformance = (students) => {
+    const subjects = ['Anatomy', 'Physiology', 'Pharmacology', 'Pathology', 'Microbiology'];
+    return subjects.map(subject => ({
+      subject,
+      averageScore: Math.floor(Math.random() * 30) + 70,
+      attendance: Math.floor(Math.random() * 20) + 80
+    }));
+  };
+
+  const generatePaymentStatusData = (fees) => {
+    const statuses = ['Paid', 'Partial', 'Pending', 'Overdue'];
+    return statuses.map(status => ({
+      name: status,
+      value: Math.floor(Math.random() * 30) + 10
+    }));
+  };
+
+  const getRandomColor = () => {
+    const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899'];
+    return colors[Math.floor(Math.random() * colors.length)];
+  };
+
+  const handleQuickAction = (action) => {
+    switch(action) {
+      case 'addStudent':
+        navigate('/admin/students/add');
+        break;
+      case 'addFaculty':
+        navigate('/admin/faculty/add');
+        break;
+      case 'feeStructure':
+        navigate('/admin/fees/structures');
+        break;
+      case 'viewReports':
+        navigate('/admin/reports');
+        break;
+      case 'manageCourses':
+        navigate('/admin/courses');
+        break;
+      case 'viewApplications':
+        navigate('/admin/admissions');
+        break;
+      case 'gallery':
+        navigate('/admin/gallery');
+        break;
+      case 'sendNotification':
+        navigate('/admin/notifications');
+        break;
+    }
+  };
 
   const handleLogout = () => {
-    navigate("/login/admin");
+    localStorage.removeItem('adminToken');
+    navigate('/login/admin');
   };
 
-  // Shared Tooltip Style
-  const customTooltipStyle = {
-    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-    borderRadius: '12px',
-    border: 'none',
-    boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-    padding: '12px',
-    fontSize: '12px'
+  const quickActions = [
+    { id: 'addStudent', label: 'Add Student', icon: Users, color: 'bg-blue-500' },
+    { id: 'addFaculty', label: 'Add Faculty', icon: UserCog, color: 'bg-purple-500' },
+    { id: 'feeStructure', label: 'Fee Structure', icon: DollarSign, color: 'bg-emerald-500' },
+    { id: 'viewReports', label: 'View Reports', icon: FileText, color: 'bg-amber-500' },
+    { id: 'manageCourses', label: 'Manage Courses', icon: BookOpen, color: 'bg-indigo-500' },
+    { id: 'viewApplications', label: 'Applications', icon: GraduationCap, color: 'bg-pink-500' },
+    { id: 'gallery', label: 'Gallery', icon: UsersIcon, color: 'bg-cyan-500' },
+    { id: 'sendNotification', label: 'Send Notification', icon: Bell, color: 'bg-red-500' }
+  ];
+
+  const statusColors = {
+    Paid: 'bg-emerald-100 text-emerald-800',
+    Partial: 'bg-amber-100 text-amber-800',
+    Pending: 'bg-blue-100 text-blue-800',
+    Overdue: 'bg-red-100 text-red-800'
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-slate-50 font-sans text-slate-900 selection:bg-blue-100">
-      
-      {/* Background decoration */}
-      <div className="fixed inset-0 z-0 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-100/50 blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-purple-100/50 blur-[120px]" />
-      </div>
-
-      <div className="relative z-10 p-4 md:p-8 max-w-7xl mx-auto space-y-8">
-        
-        {/* Header Section */}
-        <header className="flex justify-between items-end bg-white/70 backdrop-blur-xl p-6 rounded-3xl border border-white/20 shadow-sm">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      {/* Header */}
+      <div className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm">
+        <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-extrabold text-slate-800 tracking-tight">
-              Dashboard
-            </h1>
-            <p className="text-slate-500 mt-1 text-sm font-medium">Welcome back, Administrator</p>
+            <h1 className="text-2xl font-bold text-slate-800">Admin Dashboard</h1>
+            <p className="text-slate-600 text-sm">Welcome back! Here's what's happening today.</p>
           </div>
-          
-          <div className="text-sm font-medium text-slate-400">
-            {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-          </div>
-        </header>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <div 
-                key={index} 
-                className="group relative bg-white p-6 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-slate-200/50 border border-slate-100 transition-all duration-300 overflow-hidden"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className={`p-3 rounded-2xl ${stat.bg} ${stat.color} transition-colors`}>
-                    <Icon size={24} />
-                  </div>
-                  <div className={`flex items-center gap-1 text-sm font-semibold ${stat.trend === 'up' ? 'text-emerald-600 bg-emerald-50' : 'text-emerald-600 bg-emerald-50'} px-2.5 py-1 rounded-full`}>
-                    {stat.change}
-                  </div>
-                </div>
-                <div>
-                  <h3 className="text-4xl font-extrabold text-slate-800 mb-1 tracking-tight">{stat.value}</h3>
-                  <p className="text-slate-500 font-medium">{stat.title}</p>
-                </div>
-                <div className={`absolute -right-4 -bottom-4 opacity-0 group-hover:opacity-10 transition-opacity duration-500`}>
-                   <Icon size={100} className="text-slate-50" />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left Column (Charts) */}
-          <div className="lg:col-span-2 space-y-6">
-            
-            {/* 1. Student Enrollment Chart */}
-            <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-8 flex flex-col h-[400px]">
-              <div className="flex justify-between items-center mb-6">
-                <div>
-                  <h2 className="text-xl font-bold text-slate-800">Enrollment Overview</h2>
-                  <p className="text-slate-500 text-sm mt-1">Comparision with previous year</p>
-                </div>
-                <button className="p-2 bg-slate-50 hover:bg-slate-100 rounded-xl text-slate-600 transition-colors">
-                  <Download size={18} />
-                </button>
-              </div>
-
-              <div className="flex-1 w-full min-h-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={studentEnrollmentData}>
-                    <defs>
-                      <linearGradient id="colorEnrolled" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.3}/>
-                        <stop offset="95%" stopColor="#3B82F6" stopOpacity={0}/>
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                    <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} dy={10} />
-                    <YAxis axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 12}} />
-                    <Tooltip contentStyle={customTooltipStyle} cursor={{ stroke: '#3B82F6', strokeWidth: 1, strokeDasharray: '4 4' }} />
-                    <Area type="monotone" dataKey="enrolled" stroke="#3B82F6" strokeWidth={4} fillOpacity={1} fill="url(#colorEnrolled)" />
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* 2. Dual Charts Grid (Fee & Departments) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
-              {/* Fee Collection Bar Chart */}
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col h-[350px]">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
-                    <CreditCard size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800">Fee Collection</h3>
-                    <p className="text-xs text-slate-500">In Thousands ($)</p>
-                  </div>
-                </div>
-                <div className="flex-1 w-full min-h-0">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={feeCollectionData}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-                      <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{fill: '#64748B', fontSize: 11}} dy={10} />
-                      <Tooltip contentStyle={customTooltipStyle} cursor={{fill: '#f1f5f9'}} />
-                      <Bar dataKey="collected" fill="#10B981" radius={[4, 4, 0, 0]} stackId="a" />
-                      <Bar dataKey="pending" fill="#EF4444" radius={[4, 4, 0, 0]} stackId="a" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Department Distribution Pie Chart */}
-              <div className="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 flex flex-col h-[350px]">
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                    <PieIcon size={18} />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-slate-800">Department Split</h3>
-                    <p className="text-xs text-slate-500">Students per Dept</p>
-                  </div>
-                </div>
-                <div className="flex-1 w-full min-h-0 relative">
-                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie
-                        data={departmentData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={5}
-                        dataKey="value"
-                      >
-                        {departmentData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={entry.color} strokeWidth={0} />
-                        ))}
-                      </Pie>
-                      <Tooltip contentStyle={customTooltipStyle} />
-                      <Legend 
-                        verticalAlign="bottom" 
-                        height={36} 
-                        iconType="circle"
-                        formatter={(value) => <span className="text-slate-500 text-xs font-medium ml-1">{value}</span>}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                  {/* Center Text for Donut */}
-                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none pb-8">
-                     <p className="text-2xl font-bold text-slate-800">4</p>
-                     <p className="text-xs text-slate-400">Depts</p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* Right Column: Quick Actions Only */}
-          <div className="space-y-6">
-            
-            {/* Quick Actions */}
-            <div className="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl p-6 text-white shadow-xl shadow-indigo-500/20">
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="font-bold text-lg">Quick Actions</h3>
-                <div className="bg-white/10 p-2 rounded-lg cursor-pointer hover:bg-white/20 transition-colors">
-                  <Settings size={18} />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                {[
-                  { label: 'Add Student', icon: Plus },
-                  { label: 'Add Faculty', icon: UserCog },
-                  { label: 'New Event', icon: Bell },
-                  { label: 'Reports', icon: Download },
-                ].map((action, i) => (
-                  <button key={i} className="flex flex-col items-center justify-center p-4 bg-white/10 hover:bg-white/20 border border-white/5 rounded-2xl transition-all duration-200 group">
-                    <action.icon size={24} className="mb-2 text-indigo-100 group-hover:text-white group-hover:scale-110 transition-all" />
-                    <span className="text-xs font-medium text-indigo-100 group-hover:text-white">{action.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* "Pending Queries" List widget removed here */}
-
-          </div>
-        </div>
-
-        {/* Footer */}
-        <div className="flex flex-col md:flex-row justify-between items-center text-xs text-slate-400 mt-12 py-6 border-t border-slate-200">
-          <p>© 2024 Institution Admin Portal. All rights reserved.</p>
-          <div className="flex gap-6 mt-2 md:mt-0">
-            <button className="hover:text-slate-600 transition-colors">Privacy Policy</button>
-            <button className="hover:text-slate-600 transition-colors">Terms of Service</button>
-            <button className="hover:text-slate-600 transition-colors flex items-center gap-1" onClick={handleLogout}>
-              <LogOut size={12} /> Logout
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={() => navigate('/admin/notifications')}
+              className="relative p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <Bell size={20} className="text-slate-600" />
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                3
+              </span>
+            </button>
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+            >
+              <LogOut size={18} />
+              Logout
             </button>
           </div>
         </div>
-
       </div>
-    </div>
+
+      <div className="p-6 space-y-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {[
+            {
+              title: 'Total Students',
+              value: stats.totalStudents,
+              change: '+12%',
+              trend: 'up',
+              icon: Users,
+              color: 'text-blue-600',
+              bg: 'bg-blue-50',
+              link: '/admin/students'
+            },
+            {
+              title: 'Active Faculty',
+              value: stats.activeFaculty,
+              change: '+5%',
+              trend: 'up',
+              icon: UserCog,
+              color: 'text-purple-600',
+              bg: 'bg-purple-50',
+              link: '/admin/faculty'
+            },
+            {
+              title: 'Total Revenue',
+              value: `₹${stats.totalRevenue.toLocaleString()}`,
+              change: '+18%',
+              trend: 'up',
+              icon: DollarSign,
+              color: 'text-emerald-600',
+              bg: 'bg-emerald-50',
+              link: '/admin/fees'
+            },
+            {
+              title: 'Pending Applications',
+              value: stats.pendingApplications,
+              change: '-3%',
+              trend: 'down',
+              icon: GraduationCap,
+              color: 'text-amber-600',
+              bg: 'bg-amber-50',
+              link: '/admin/admissions'
+            }
+          ].map((stat, index) => (
+            <div 
+              key={index}
+              className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer"
+              onClick={() => navigate(stat.link)}
+            >
+              <div className="flex justify-between items-start">
+                <div className={`p-3 ${stat.bg} rounded-lg`}>
+                  <stat.icon size={24} className={stat.color} />
+                </div>
+                <div className={`flex items-center gap-1 text-sm font-medium ${stat.trend === 'up' ? 'text-emerald-600' : 'text-red-600'}`}>
+                  {stat.trend === 'up' ? <TrendingUp size={16} /> : <TrendingDown size={16} />}
+                  {stat.change}
+                </div>
+              </div>
+              <h3 className="text-3xl font-bold text-slate-800 mt-4">{stat.value}</h3>
+              <p className="text-slate-600 text-sm mt-1">{stat.title}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Enrollment Chart */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-lg font-semibold text-slate-800">Student Enrollment Trend</h3>
+              <div className="flex gap-2">
+                <button className="px-3 py-1 text-sm bg-slate-100 hover:bg-slate-200 rounded-lg">Yearly</button>
+                <button className="px-3 py-1 text-sm hover:bg-slate-100 rounded-lg">Monthly</button>
+              </div>
+            </div>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={enrollmentData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Area type="monotone" dataKey="2024" stackId="1" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} />
+                  <Area type="monotone" dataKey="2023" stackId="1" stroke="#10B981" fill="#10B981" fillOpacity={0.3} />
+                </AreaChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Fee Collection Chart */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">Fee Collection Overview</h3>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={feeCollectionData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E2E8F0" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar dataKey="collected" fill="#10B981" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="pending" fill="#EF4444" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
+        {/* Additional Charts */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Course Distribution */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">Course Distribution</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={courseDistribution}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={40}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    label
+                  >
+                    {courseDistribution.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                  <Legend />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Student Performance Radar */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">Student Performance</h3>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <RadarChart data={studentPerformance}>
+                  <PolarGrid />
+                  <PolarAngleAxis dataKey="subject" />
+                  <PolarRadiusAxis />
+                  <Radar name="Average Score" dataKey="averageScore" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />
+                  <Radar name="Attendance %" dataKey="attendance" stroke="#10B981" fill="#10B981" fillOpacity={0.6} />
+                  <Legend />
+                  <Tooltip />
+                </RadarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          {/* Payment Status */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">Payment Status Distribution</h3>
+            <div className="space-y-4">
+              {paymentStatusData.map((status, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div 
+                      className="w-3 h-3 rounded-full"
+                      style={{ backgroundColor: getRandomColor() }}
+                    />
+                    <span className="text-slate-700">{status.name}</span>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="w-32 bg-slate-200 rounded-full h-2">
+                      <div 
+                        className="h-full rounded-full"
+                        style={{ 
+                          width: `${(status.value / paymentStatusData.reduce((a, b) => a + b.value, 0)) * 100}%`,
+                          backgroundColor: getRandomColor()
+                        }}
+                      />
+                    </div>
+                    <span className="font-medium">{status.value}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions & Recent Transactions */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Quick Actions */}
+          <div className="lg:col-span-2 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">Quick Actions</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {quickActions.map((action) => (
+                <button
+                  key={action.id}
+                  onClick={() => handleQuickAction(action.id)}
+                  className="flex flex-col items-center p-4 bg-slate-50 hover:bg-slate-100 rounded-xl transition-colors group"
+                >
+                  <div className={`p-3 ${action.color} rounded-lg mb-3 group-hover:scale-110 transition-transform`}>
+                    <action.icon size={20} className="text-white" />
+                  </div>
+                  <span className="text-sm font-medium text-slate-700">{action.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Transactions */}
+          <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+            <h3 className="text-lg font-semibold text-slate-800 mb-6">Recent Transactions</h3>
+            <div className="space-y-4">
+              {recentTransactions.length > 0 ? (
+                recentTransactions.map((transaction, index) => (
+                  <div key={index} className="flex items-center justify-between p-3 hover:bg-slate-50 rounded-lg">
+                    <div>
+                      <p className="font-medium text-slate-800">#{transaction.transactionId}</p>
+                      <p className="text-sm text-slate-600">{transaction.date}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-bold text-slate-800">₹{transaction.amount}</p>
+                      <span className={`px-2 py-1 text-xs rounded-full ${statusColors[transaction.status] || 'bg-slate-100 text-slate-800'}`}>
+                        {transaction.status}
+                      </span>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-center py-8 text-slate-500">
+                  <CreditCard size={48} className="mx-auto mb-3 opacity-50" />
+                  <p>No recent transactions</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* System Status */}
+       
+        </div>
+      </div>
+    
   );
 };
 

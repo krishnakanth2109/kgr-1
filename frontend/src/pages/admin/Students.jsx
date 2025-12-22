@@ -2,19 +2,24 @@ import React, { useState, useEffect } from 'react';
 import { 
   fetchStudents, createStudent, updateStudent, deleteStudent 
 } from '../../api/studentApi'; 
-import { uploadFile } from '../../api/uploadApi'; // Ensure this exists
+import { uploadFile } from '../../api/uploadApi'; 
 import { 
   Plus, Edit3, Trash2, Search, ArrowLeft, Printer, Save, 
   User, MapPin, BookOpen, CreditCard, Loader2, GraduationCap, 
   Key, Check, AlertCircle, Phone, Calendar, Mail, FileText,
-  BadgeCheck, School, UploadCloud, Image as ImageIcon
+  BadgeCheck, School, UploadCloud, Image as ImageIcon, Eye, X
 } from 'lucide-react';
+import * as XLSX from 'xlsx'; // Optional: If you use export
 
 const Students = () => {
   const [view, setView] = useState('list'); 
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentStudent, setCurrentStudent] = useState(null);
+  
+  // State for View Modal
+  const [viewStudent, setViewStudent] = useState(null);
+  
   const [newCredentials, setNewCredentials] = useState(null); 
   const [filters, setFilters] = useState({ search: '', course_type: '' });
 
@@ -38,7 +43,7 @@ const Students = () => {
   const handlePrint = (s) => { setCurrentStudent(s); setView('print'); };
   
   const handleDelete = async (id) => { 
-    if (window.confirm("Are you sure you want to delete this student record? This cannot be undone.")) { 
+    if (window.confirm("Are you sure you want to delete this student record?")) { 
       try { await deleteStudent(id); loadData(); } catch (err) { alert("Delete failed"); }
     } 
   };
@@ -63,7 +68,8 @@ const Students = () => {
       {view === 'list' && (
         <ListView 
           students={students} loading={loading} filters={filters} setFilters={setFilters}
-          onCreate={handleCreate} onEdit={handleEdit} onDelete={handleDelete} onPrint={handlePrint}
+          onCreate={handleCreate} onEdit={handleEdit} onDelete={handleDelete} 
+          onPrint={handlePrint} onView={(s) => setViewStudent(s)}
         />
       )}
       {view === 'form' && (
@@ -71,28 +77,38 @@ const Students = () => {
           initialData={currentStudent} onCancel={() => setView('list')} onSuccess={handleFormSuccess}
         />
       )}
+      
+      {/* --- MODALS --- */}
       {view === 'credentials' && newCredentials && (
         <CredentialsModal 
           data={newCredentials} onClose={() => { setNewCredentials(null); setView('list'); }}
           onPrint={() => handlePrint(newCredentials.fullData)}
         />
       )}
+
+      {viewStudent && (
+        <StudentProfileModal 
+            student={viewStudent} 
+            onClose={() => setViewStudent(null)}
+            onPrint={() => { setViewStudent(null); handlePrint(viewStudent); }}
+            onEdit={() => { setViewStudent(null); handleEdit(viewStudent); }}
+        />
+      )}
+
       {view === 'print' && <PrintView student={currentStudent} onBack={() => setView('list')} />}
     </div>
   );
 };
 
 /* ==========================
-   1. BRILLIANT LIST VIEW
+   1. LIST VIEW
    ========================== */
-const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, onDelete, onPrint }) => (
+const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, onDelete, onPrint, onView }) => (
   <div className="p-4 md:p-8 max-w-[1600px] mx-auto space-y-8">
     
-    {/* Hero Header */}
     <div className="relative bg-slate-900 rounded-[2.5rem] p-10 overflow-hidden shadow-2xl shadow-slate-200">
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-indigo-600 rounded-full blur-[120px] opacity-20 -translate-y-1/2 translate-x-1/2"></div>
       <div className="absolute bottom-0 left-0 w-[300px] h-[300px] bg-purple-600 rounded-full blur-[100px] opacity-20 translate-y-1/2 -translate-x-1/2"></div>
-      
       <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
           <div className="flex items-center gap-3 mb-2">
@@ -104,16 +120,15 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
           <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight">Student Directory</h1>
           <p className="text-slate-400 mt-2 font-medium text-lg max-w-lg">Manage admissions, track fees, and access student profiles efficiently.</p>
         </div>
-        <button onClick={onCreate} className="group bg-white text-slate-900 px-8 py-4 rounded-2xl font-bold shadow-xl shadow-white/10 hover:shadow-white/20 hover:scale-105 transition-all duration-300 flex items-center gap-3">
+        <button onClick={onCreate} className="group bg-white text-slate-900 px-8 py-4 rounded-2xl font-bold shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 flex items-center gap-3">
           <div className="bg-indigo-600 rounded-full p-1 text-white group-hover:rotate-90 transition-transform duration-500"><Plus size={18} strokeWidth={3}/></div>
           New Admission
         </button>
       </div>
     </div>
 
-    {/* Filters Toolbar */}
-    <div className="bg-white p-2 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col md:flex-row gap-2 sticky top-4 z-20 backdrop-blur-xl bg-white/90">
-      <div className="relative flex-1 group">
+    <div className="bg-white p-2 rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-100 flex flex-col md:flex-row gap-2 sticky top-4 z-20 backdrop-blur-xl bg-white/90 items-center">
+      <div className="relative flex-1 group w-full">
         <Search className="absolute left-5 top-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
         <input 
           type="text" placeholder="Search by Name, Ad. No, Email or Mobile..." value={filters.search}
@@ -126,39 +141,38 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
         value={filters.course_type} onChange={(e) => setFilters({...filters, course_type: e.target.value})}
         className="px-8 py-4 bg-slate-50 border-l border-slate-100 outline-none font-bold text-slate-600 cursor-pointer hover:bg-slate-100 transition-colors rounded-xl md:rounded-l-none md:w-64 appearance-none"
       >
-        <option value="">All Courses</option><option value="GNM">GNM</option><option value="Vocational">Vocational</option>
+        <option value="">All Departments</option><option value="GNM">GNM</option><option value="Vocational">Vocational</option>
       </select>
     </div>
 
-    {/* Student Grid (Modern Cards Layout for better visual) */}
     <div className="bg-white rounded-[2rem] shadow-xl border border-slate-100 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="bg-slate-50/80 border-b border-slate-100 text-slate-400 text-xs uppercase font-extrabold tracking-wider">
               <th className="p-6 pl-8">Student Profile</th>
-              <th className="p-6">Course & Fee</th>
-              <th className="p-6">Contact Info</th>
+              <th className="p-6">Course Info</th>
+              <th className="p-6">Contact</th>
               <th className="p-6 text-center">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-50">
             {loading ? <tr><td colSpan="4" className="p-20 text-center text-slate-400"><Loader2 className="animate-spin mx-auto mb-4 w-10 h-10 text-indigo-500"/>Loading Database...</td></tr> : 
-            students.length === 0 ? <tr><td colSpan="4" className="p-20 text-center text-slate-400 font-medium">No students found matching your search.</td></tr> :
+            students.length === 0 ? <tr><td colSpan="4" className="p-20 text-center text-slate-400 font-medium">No students found.</td></tr> :
             students.map((s) => {
               const dName = s.student_name || s.first_name || 'Unknown';
               return (
-                <tr key={s._id} className="hover:bg-indigo-50/40 transition-colors duration-200 group">
+                <tr key={s._id} className="hover:bg-indigo-50/30 transition-colors duration-200 group">
                   <td className="p-6 pl-8">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-300">
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-300">
                         {dName[0]}
                       </div>
                       <div>
-                          <div className="font-bold text-slate-800 text-lg leading-tight">{dName}</div>
-                          <div className="flex items-center gap-2 mt-1.5">
-                             <span className="text-[10px] font-bold font-mono text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-wide">{s.admission_number || 'NO ID'}</span>
-                             {s.email && <span className="text-xs text-slate-400 flex items-center gap-1"><Mail size={10}/> {s.email}</span>}
+                          <div className="font-bold text-slate-800 text-lg">{dName}</div>
+                          <div className="flex items-center gap-2 mt-1">
+                             <div className="text-[10px] font-mono font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded border border-indigo-100 uppercase tracking-wide">{s.admission_number || 'NO ID'}</div>
+                             {s.email && <div className="text-xs text-slate-400 flex items-center gap-1"><Mail size={12}/> {s.email}</div>}
                           </div>
                       </div>
                     </div>
@@ -166,14 +180,10 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
                   <td className="p-6">
                     <div className="flex flex-col gap-2">
                       <div className="flex items-center gap-2">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold uppercase tracking-wide ${s.course_type === 'GNM' ? 'bg-purple-100 text-purple-700' : 'bg-amber-100 text-amber-700'}`}>
+                        <span className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-bold w-fit border ${s.course_type === 'GNM' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-amber-50 text-amber-700 border-amber-100'}`}>
                           {s.course_type}
                         </span>
                         {s.course_name && <span className="text-xs font-bold text-slate-500">{s.course_name}</span>}
-                      </div>
-                      {/* Fee Progress Bar */}
-                      <div className="w-32 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                         <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${s.fees?.total_fee > 0 ? (s.fees.fee_paid/s.fees.total_fee)*100 : 0}%` }}></div>
                       </div>
                       <div className="text-[10px] font-bold text-slate-400">
                         Paid: <span className="text-emerald-600">₹{s.fees?.fee_paid || 0}</span> / ₹{s.fees?.total_fee || 0}
@@ -181,9 +191,9 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
                     </div>
                   </td>
                   <td className="p-6">
-                    <div className="space-y-1">
+                    <div className="flex flex-col gap-1">
                       <div className="flex items-center gap-2 text-sm font-semibold text-slate-600">
-                        <Phone size={14} className="text-slate-400"/> {s.student_mobile || 'N/A'}
+                        <Phone size={14} className="text-slate-400"/> {s.student_mobile || '-'}
                       </div>
                       <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
                         <MapPin size={14} className="text-slate-300"/> {s.district || 'N/A'}
@@ -191,7 +201,8 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
                     </div>
                   </td>
                   <td className="p-6">
-                    <div className="flex justify-center gap-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div className="flex justify-center gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                        <ActionButton icon={<Eye size={18}/>} onClick={() => onView(s)} className="text-emerald-600 bg-white border border-emerald-100 hover:bg-emerald-50 hover:border-emerald-200" tooltip="View Profile" />
                         <ActionButton icon={<Printer size={18}/>} onClick={() => onPrint(s)} className="text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 hover:text-slate-900" tooltip="Print Form" />
                         <ActionButton icon={<Edit3 size={18}/>} onClick={() => onEdit(s)} className="text-indigo-600 bg-white border border-indigo-100 hover:bg-indigo-50 hover:border-indigo-200" tooltip="Edit Record" />
                         <ActionButton icon={<Trash2 size={18}/>} onClick={() => onDelete(s._id)} className="text-rose-600 bg-white border border-rose-100 hover:bg-rose-50 hover:border-rose-200" tooltip="Delete" />
@@ -208,28 +219,25 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
 );
 
 const ActionButton = ({ icon, onClick, className, tooltip }) => (
-  <button onClick={onClick} title={tooltip} className={`p-3 rounded-xl transition-all duration-200 hover:scale-105 active:scale-95 shadow-sm ${className}`}>
-    {icon}
-  </button>
+  <button onClick={onClick} title={tooltip} className={`p-3 rounded-xl transition-all duration-200 hover:scale-110 active:scale-95 shadow-sm border ${className || 'border-slate-200 bg-white'}`}>{icon}</button>
 );
 
 /* ==========================
-   2. POLISHED FORM VIEW
+   2. FORM VIEW (With File Upload)
    ========================== */
 const FormView = ({ initialData, onCancel, onSuccess }) => {
   const [formData, setFormData] = useState({
     academic_year: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
-    password: '',
+    password: '', 
     course_type: '', course_name: '',
     student_name: '', father_name: '', mother_name: '', dob: '', age: '', gender: '', email: '',
     postal_address: '', district: '', mandal: '', sachivalayam_name: '', pincode: '',
     nationality: 'Indian', religion: '', caste: '', sub_caste: '',
-    ssc_hall_ticket: '', ssc_total_marks: '', ssc_pass_year: '', study_cert_ssc: false,
-    inter_hall_ticket: '', inter_total_marks: '', inter_pass_year: '', study_cert_inter: false, transfer_cert_inter: false,
+    ssc_hall_ticket: '', ssc_total_marks: '', ssc_pass_year: '',
+    inter_hall_ticket: '', inter_total_marks: '', inter_pass_year: '', 
     student_aadhar: '', mother_aadhar: '', father_aadhar: '', mother_bank_acc: '', bank_ifsc: '',
     student_mobile: '', parent_mobile: '', rice_card_no: '', caste_cert_no: '',
     mole_1: '', mole_2: '',
-    // Removed duplicate photo_url initialization here
     photo_url: '', student_aadhar_url: '', study_cert_ssc_url: '',
     fees: { year_1_fee: 0, year_2_fee: 0, year_3_fee: 0, total_fee: 0, fee_paid: 0 }
   });
@@ -247,7 +255,6 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
     } 
   }, [initialData]);
 
-  // Calculations
   useEffect(() => {
     if (formData.dob) {
       const age = Math.floor((new Date() - new Date(formData.dob)) / 31557600000);
@@ -281,6 +288,14 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
 
   const handleFileUpload = async (file, fieldName, setProgress) => {
     if (!file) return;
+
+    // VALIDATION: Max size 500KB for Photos
+    if (fieldName === 'photo_url' && file.size > 500 * 1024) {
+        alert("Error: Photo size must be less than 500KB.");
+        setProgress(-1);
+        return;
+    }
+
     try {
       const url = await uploadFile(file, setProgress);
       setFormData(prev => ({ ...prev, [fieldName]: url }));
@@ -296,9 +311,12 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
     if (!formData.course_name) newErrors.course_name = "Required";
     if (!formData.gender) newErrors.gender = "Required";
     if (!formData.dob) newErrors.dob = "Required";
+    
+    // Validations
     if (formData.student_mobile && !/^\d{10}$/.test(formData.student_mobile)) newErrors.student_mobile = "Must be 10 digits";
     if (formData.student_aadhar && !/^\d{12}$/.test(formData.student_aadhar)) newErrors.student_aadhar = "Must be 12 digits";
     if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = "Invalid Email";
+    
     if (formData.course_name === 'MPHW' && formData.gender !== 'Female') {
         newErrors.course_name = "Female Only";
         newErrors.gender = "Change Gender";
@@ -328,13 +346,10 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
     <div className="min-h-screen bg-slate-100/50 py-8 px-4">
       <div className="max-w-6xl mx-auto bg-white rounded-[2rem] shadow-2xl overflow-hidden border border-slate-200">
         
-        {/* Sticky Header */}
-        <div className="px-8 py-5 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white/90 backdrop-blur-xl z-30">
+        {/* Sticky Form Header */}
+        <div className="px-8 py-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white/90 backdrop-blur-xl z-30">
           <div>
-             <h2 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2">
-                {initialData ? <Edit3 className="text-indigo-500" size={24}/> : <Plus className="text-indigo-500" size={24}/>}
-                {initialData ? 'Edit Student Record' : 'New Admission'}
-             </h2>
+             <h2 className="text-2xl font-black text-slate-800 tracking-tight">{initialData ? 'Edit Student Record' : 'New Admission'}</h2>
              <p className="text-xs font-bold text-slate-400 mt-1 uppercase tracking-wide pl-8">Academic Year: {formData.academic_year}</p>
           </div>
           <div className="flex gap-3">
@@ -365,7 +380,13 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
                         </div>
                       }
                    </div>
-                   <ModernInput label="Photo URL" name="photo_url" value={formData.photo_url} onChange={handleChange} icon={<User size={18}/>} />
+                   {/* FILE UPLOAD HERE */}
+                   <ModernFileInput 
+                      label="Student Photo (Passport Size)" 
+                      fieldName="photo_url"
+                      currentUrl={formData.photo_url}
+                      onUpload={handleFileUpload}
+                   />
                 </div>
              </SectionCard>
 
@@ -408,7 +429,7 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
              <div className="grid md:grid-cols-4 gap-6">
                 <ModernInput label="Student Aadhar" name="student_aadhar" value={formData.student_aadhar} onChange={handleChange} error={errors.student_aadhar} maxLength={12} />
                 <ModernInput label="Rice Card" name="rice_card_no" value={formData.rice_card_no} onChange={handleChange} />
-                <ModernInput label="Bank A/C (Mother)" name="mother_bank_acc" value={formData.mother_bank_acc} onChange={handleChange} />
+                <ModernInput label="Bank A/C" name="mother_bank_acc" value={formData.mother_bank_acc} onChange={handleChange} />
                 <ModernInput label="IFSC Code" name="bank_ifsc" value={formData.bank_ifsc} onChange={handleChange} />
                 <div className="md:col-span-2"><ModernInput label="Mole 1" name="mole_1" value={formData.mole_1} onChange={handleChange} /></div>
                 <div className="md:col-span-2"><ModernInput label="Mole 2" name="mole_2" value={formData.mole_2} onChange={handleChange} /></div>
@@ -416,33 +437,17 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
           </SectionCard>
           
           <SectionCard title="Document Uploads" icon={<UploadCloud size={20} className="text-sky-500"/>} color="sky">
-              <div className="grid md:grid-cols-3 gap-6">
-                  <ModernFileInput 
-                      label="Student Photo" 
-                      fieldName="photo_url"
-                      currentUrl={formData.photo_url}
-                      onUpload={handleFileUpload}
-                  />
-                  <ModernFileInput 
-                      label="Aadhar Card" 
-                      fieldName="student_aadhar_url"
-                      currentUrl={formData.student_aadhar_url}
-                      onUpload={handleFileUpload}
-                  />
-                  <ModernFileInput 
-                      label="SSC Certificate" 
-                      fieldName="study_cert_ssc_url"
-                      currentUrl={formData.study_cert_ssc_url}
-                      onUpload={handleFileUpload}
-                  />
+              <div className="grid md:grid-cols-2 gap-6">
+                  <ModernFileInput label="Aadhar Card Copy" fieldName="student_aadhar_url" currentUrl={formData.student_aadhar_url} onUpload={handleFileUpload} />
+                  <ModernFileInput label="SSC Certificate Copy" fieldName="study_cert_ssc_url" currentUrl={formData.study_cert_ssc_url} onUpload={handleFileUpload} />
               </div>
           </SectionCard>
 
           <SectionCard title="Fee Details" icon={<CreditCard size={20} className="text-emerald-500"/>} color="emerald">
              <div className="grid grid-cols-2 md:grid-cols-5 gap-6 items-end">
-                <ModernInput label="1st Year" name="year_1_fee" value={formData.fees?.year_1_fee} onChange={handleFeeChange} type="number" />
-                <ModernInput label="2nd Year" name="year_2_fee" value={formData.fees?.year_2_fee} onChange={handleFeeChange} type="number" />
-                <ModernInput label="3rd Year" name="year_3_fee" value={formData.fees?.year_3_fee} onChange={handleFeeChange} type="number" />
+                <ModernInput label="1st Year Fee" name="year_1_fee" value={formData.fees?.year_1_fee} onChange={handleFeeChange} type="number" />
+                <ModernInput label="2nd Year Fee" name="year_2_fee" value={formData.fees?.year_2_fee} onChange={handleFeeChange} type="number" />
+                <ModernInput label="3rd Year Fee" name="year_3_fee" value={formData.fees?.year_3_fee} onChange={handleFeeChange} type="number" />
                 <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-4 shadow-inner">
                    <div className="text-[10px] font-bold text-emerald-600 uppercase tracking-wide mb-1">Total Fee</div>
                    <div className="text-2xl font-black text-emerald-800">₹{formData.fees?.total_fee}</div>
@@ -458,7 +463,6 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
 };
 
 /* --- UI COMPONENTS (Modernized) --- */
-
 const SectionCard = ({ title, icon, children, color }) => (
   <div className={`bg-white rounded-[1.5rem] p-8 border border-slate-100 shadow-xl shadow-slate-200/40 hover:shadow-2xl hover:shadow-${color}-100/50 transition-all duration-300 relative overflow-hidden group`}>
     <div className={`absolute top-0 right-0 w-24 h-24 bg-${color}-50 rounded-full blur-2xl -mr-10 -mt-10 transition-transform group-hover:scale-150`}></div>
@@ -472,23 +476,23 @@ const SectionCard = ({ title, icon, children, color }) => (
 
 const ModernInput = ({ label, icon, error, className, ...props }) => (
   <div className="w-full group">
-    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-2 ml-1 tracking-wide group-focus-within:text-indigo-600 transition-colors">{label}</label>
+    <label className={`block text-[11px] font-bold uppercase mb-2 ml-1 tracking-wide transition-colors ${error ? 'text-red-500' : 'text-slate-400 group-focus-within:text-indigo-600'}`}>{label}</label>
     <div className="relative">
-        {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">{icon}</div>}
+        {icon && <div className={`absolute left-4 top-1/2 -translate-y-1/2 transition-colors ${error ? 'text-red-400' : 'text-slate-400 group-focus-within:text-indigo-500'}`}>{React.cloneElement(icon, { size: 20 })}</div>}
         <input 
             {...props} 
-            className={`w-full ${icon ? 'pl-11' : 'pl-5'} pr-5 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-300 font-semibold text-slate-700 placeholder-slate-300 disabled:opacity-60 disabled:cursor-not-allowed ${error ? 'border-red-500 bg-red-50 focus:ring-red-200' : ''} ${className}`} 
+            className={`w-full ${icon ? 'pl-11' : 'pl-5'} pr-5 py-3.5 bg-slate-50 border-2 border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-300 font-semibold text-slate-700 placeholder-slate-300 disabled:opacity-60 disabled:cursor-not-allowed ${error ? 'border-red-500 bg-red-50 focus:ring-red-200' : ''} ${className}`} 
         />
     </div>
-    {error && <p className="text-red-500 text-[10px] font-bold mt-1.5 flex items-center gap-1 ml-1 animate-pulse"><AlertCircle size={10}/> {error}</p>}
+    {error && <p className="text-red-600 text-[10px] font-bold mt-1.5 flex items-center gap-1 ml-1 animate-pulse"><AlertCircle size={10}/> {error}</p>}
   </div>
 );
 
 const ModernSelect = ({ label, options, error, icon, ...props }) => (
   <div className="w-full group">
-    <label className="block text-[11px] font-bold text-slate-400 uppercase mb-2 ml-1 tracking-wide group-focus-within:text-indigo-600 transition-colors">{label}</label>
+    <label className={`block text-[11px] font-bold text-slate-400 uppercase mb-2 ml-1 tracking-wide group-focus-within:text-indigo-600 transition-colors`}>{label}</label>
     <div className="relative">
-        {icon && <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors">{icon}</div>}
+        {icon && <div className={`absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors`}>{React.cloneElement(icon, { size: 20 })}</div>}
         <select 
             {...props} 
             className={`w-full ${icon ? 'pl-11' : 'pl-5'} pr-10 py-3.5 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all duration-300 font-semibold text-slate-700 cursor-pointer appearance-none ${error ? 'border-red-500 bg-red-50' : ''}`}
@@ -555,8 +559,10 @@ const ModernFileInput = ({ label, fieldName, currentUrl, onUpload }) => {
 };
 
 /* ==========================
-   CREDENTIALS MODAL
+   CREDENTIALS MODAL, PROFILE POPUP & PRINT VIEW
+   (Keeping previous code components as they were)
    ========================== */
+
 const CredentialsModal = ({ data, onClose, onPrint }) => (
   <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-md flex items-center justify-center z-50 p-4">
     <div className="bg-white rounded-[2rem] shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/20">
@@ -594,9 +600,98 @@ const CredentialsModal = ({ data, onClose, onPrint }) => (
   </div>
 );
 
-/* ==========================
-   PRINT VIEW
-   ========================== */
+const StudentProfileModal = ({ student, onClose, onPrint, onEdit }) => {
+    if (!student) return null;
+    const s = student;
+    const displayName = s.student_name || s.first_name || 'Student';
+    const progress = s.fees?.total_fee > 0 ? (s.fees.fee_paid / s.fees.total_fee) * 100 : 0;
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-md flex items-center justify-center z-50 p-4 animate-in fade-in zoom-in duration-200">
+            <div className="bg-white w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden border border-white/20 max-h-[90vh] overflow-y-auto">
+                <div className="bg-slate-900 p-8 text-white relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500 rounded-full blur-[80px] opacity-20 -translate-y-1/2 translate-x-1/3"></div>
+                    <div className="relative z-10 flex justify-between items-start">
+                        <div className="flex gap-5 items-center">
+                            <div className="w-20 h-20 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center overflow-hidden">
+                                {s.photo_url ? <img src={s.photo_url} className="w-full h-full object-cover"/> : <User size={40} className="text-white/50"/>}
+                            </div>
+                            <div>
+                                <div className="flex items-center gap-2 mb-1">
+                                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-500/20 border border-indigo-400/30 text-[10px] font-bold uppercase tracking-wider text-indigo-200">
+                                        {s.course_type} • {s.course_name}
+                                    </span>
+                                </div>
+                                <h2 className="text-2xl font-black tracking-tight">{displayName}</h2>
+                                <p className="text-slate-400 font-mono text-sm flex items-center gap-2 mt-1">
+                                    <BadgeCheck size={14}/> {s.admission_number}
+                                </p>
+                            </div>
+                        </div>
+                        <button onClick={onClose} className="p-2 bg-white/10 hover:bg-white/20 rounded-full transition text-white/70 hover:text-white"><X size={20}/></button>
+                    </div>
+                </div>
+
+                <div className="p-8 space-y-8">
+                    <div className="grid grid-cols-3 gap-4">
+                        <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Fee</p>
+                            <p className="text-xl font-black text-slate-800">₹{s.fees?.total_fee}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-100 text-center">
+                            <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Paid</p>
+                            <p className="text-xl font-black text-emerald-700">₹{s.fees?.fee_paid}</p>
+                        </div>
+                        <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100 text-center">
+                            <p className="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">Balance</p>
+                            <p className="text-xl font-black text-indigo-700">₹{s.fees?.total_fee - s.fees?.fee_paid}</p>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div className="flex justify-between text-xs font-bold mb-2 text-slate-500 uppercase">
+                            <span>Payment Progress</span>
+                            <span>{Math.round(progress)}% Completed</span>
+                        </div>
+                        <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full" style={{width: `${progress}%`}}></div>
+                        </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-8 text-sm">
+                        <div className="space-y-4">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <User size={16} className="text-indigo-500"/> Personal Details
+                            </h3>
+                            <ul className="space-y-3 text-slate-600">
+                                <li className="flex justify-between"><span>Father:</span> <span className="font-semibold text-slate-800">{s.father_name}</span></li>
+                                <li className="flex justify-between"><span>Mother:</span> <span className="font-semibold text-slate-800">{s.mother_name}</span></li>
+                                <li className="flex justify-between"><span>DOB:</span> <span className="font-semibold text-slate-800">{new Date(s.dob).toLocaleDateString()}</span></li>
+                                <li className="flex justify-between"><span>Gender:</span> <span className="font-semibold text-slate-800">{s.gender}</span></li>
+                            </ul>
+                        </div>
+                        <div className="space-y-4">
+                            <h3 className="font-bold text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+                                <MapPin size={16} className="text-indigo-500"/> Contact Info
+                            </h3>
+                            <ul className="space-y-3 text-slate-600">
+                                <li className="flex justify-between"><span>Mobile:</span> <span className="font-semibold text-slate-800">{s.student_mobile}</span></li>
+                                <li className="flex justify-between"><span>Parent:</span> <span className="font-semibold text-slate-800">{s.parent_mobile}</span></li>
+                                <li className="block mt-2 text-xs bg-slate-50 p-2 rounded border border-slate-100">{s.postal_address}, {s.mandal} - {s.pincode}</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div className="pt-6 border-t border-slate-100 flex gap-3 justify-end">
+                         <button onClick={onPrint} className="flex-1 bg-slate-50 text-slate-700 py-3 rounded-xl font-bold hover:bg-slate-100 transition flex items-center justify-center gap-2"><Printer size={18}/> Print Form</button>
+                         <button onClick={onEdit} className="flex-1 bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 transition flex items-center justify-center gap-2 shadow-lg shadow-indigo-200"><Edit3 size={18}/> Edit Record</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const PrintView = ({ student, onBack }) => {
   if (!student) return null;
   const today = new Date().toLocaleDateString('en-GB');
@@ -611,7 +706,6 @@ const PrintView = ({ student, onBack }) => {
       </div>
 
       <div className="bg-white w-[210mm] min-h-[297mm] shadow-2xl print:shadow-none mx-auto relative overflow-hidden p-12 print:p-8 print:m-0">
-        {/* Print Header */}
         <div className="text-center border-b-2 border-indigo-900 pb-6 mb-10">
            <h1 className="text-4xl font-black text-indigo-900 font-serif uppercase tracking-tight mb-2">KGR Vocational Junior College</h1>
            <p className="text-slate-600 font-bold tracking-[0.3em] text-xs uppercase">Recognized by Govt. of Andhra Pradesh</p>
@@ -619,12 +713,6 @@ const PrintView = ({ student, onBack }) => {
            <div className="mt-6 bg-indigo-900 text-white px-12 py-2 inline-block rounded-full text-sm font-bold uppercase print:bg-black print:text-white print:border-none tracking-widest shadow-md">Student Admission Form</div>
         </div>
 
-        {/* Watermark */}
-        <div className="absolute inset-0 flex items-center justify-center opacity-[0.03] pointer-events-none select-none">
-           <h1 className="text-[200px] font-black -rotate-45">KGR</h1>
-        </div>
-
-        {/* Top Info */}
         <div className="flex justify-between items-start mb-12 relative z-10">
            <div className="space-y-3">
               <InfoRow label="Admission No" value={student.admission_number} big />
@@ -637,7 +725,6 @@ const PrintView = ({ student, onBack }) => {
            </div>
         </div>
 
-        {/* Main Details */}
         <SectionHeader title="01. Personal Information" />
         <div className="grid grid-cols-2 gap-x-8 gap-y-4 mb-8 relative z-10 text-sm">
              <GridRow label="Full Name" value={sName} full />

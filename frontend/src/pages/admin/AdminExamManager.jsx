@@ -1,11 +1,12 @@
-// src/pages/admin/AdminExamManager.jsx
-import React, { useState } from 'react';
-import { bulkCreateExams } from '../../api/adminStudentExtras'; // Import the new helper
-import { Calendar, Plus, Save, Loader2, Users } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { bulkCreateExams, fetchBatchExams } from '../../api/adminStudentExtras'; 
+import { Calendar, Plus, Save, Loader2, Users, Clock, CheckCircle, RefreshCw, Trash2, Edit } from 'lucide-react';
 
 const AdminExamManager = () => {
   const [loading, setLoading] = useState(false);
+  const [fetchLoading, setFetchLoading] = useState(false);
   const [batch, setBatch] = useState({ program: 'MPHW', admissionYear: new Date().getFullYear().toString() });
+  const [scheduledExams, setScheduledExams] = useState([]); 
   
   const [examDetails, setExamDetails] = useState({
     subject: '',
@@ -17,27 +18,48 @@ const AdminExamManager = () => {
     maxMarks: 100
   });
 
+  // --- 1. Fetch Logic ---
+  useEffect(() => {
+    loadBatchExams();
+  }, [batch.program, batch.admissionYear]);
+
+  const loadBatchExams = async () => {
+    setFetchLoading(true);
+    try {
+        console.log(`Fetching exams for ${batch.program} - ${batch.admissionYear}...`);
+        const data = await fetchBatchExams(batch.program, batch.admissionYear);
+        console.log("Exams fetched:", data); // Debugging log
+        setScheduledExams(data || []);
+    } catch (err) {
+        console.error("Failed to load exams", err);
+        // alert("Failed to load existing exams. Check console.");
+    } finally {
+        setFetchLoading(false);
+    }
+  };
+
   const handlePublishExam = async (e) => {
     e.preventDefault();
     if (!window.confirm(`Publish this exam to ALL ${batch.program} students from batch ${batch.admissionYear}?`)) return;
 
     setLoading(true);
     try {
-      // Use the new Bulk API
       const response = await bulkCreateExams({
         program: batch.program,
-        admissionYear: Number(batch.admissionYear), // Ensure it's a number to match DB type
+        admissionYear: Number(batch.admissionYear),
         examDetails: examDetails
       });
 
       alert(response.message);
       
       // Reset Form
-      setExamDetails({ subject: '', examDate: '', startTime: '', endTime: '', roomNo: '', examType: 'Theory', maxMarks: 100 }); 
+      setExamDetails({ subject: '', examDate: '', startTime: '', endTime: '', roomNo: '', examType: 'Theory', maxMarks: 100 });
+      
+      // Refresh the table immediately
+      await loadBatchExams(); 
 
     } catch (err) {
       console.error(err);
-      // Show specific error message from backend if available
       const msg = err.response?.data?.message || "Failed to publish exam schedule.";
       alert(msg);
     } finally {
@@ -46,38 +68,54 @@ const AdminExamManager = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <h1 className="text-2xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-        <Calendar className="text-orange-600" /> Exam Scheduler
-      </h1>
+    <div className="p-6 bg-gray-50 min-h-screen font-sans text-slate-800">
+      
+      {/* CSS for Inputs */}
+      <style>{`
+        .label { display: block; font-size: 0.75rem; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; margin-left: 0.25rem; }
+        .input { width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.75rem; background-color: #f8fafc; font-weight: 600; color: #334155; outline: none; transition: all 0.2s; }
+        .input:focus { background-color: #ffffff; ring: 2px; ring-color: #dbeafe; border-color: #3b82f6; }
+      `}</style>
+
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+            <div className="p-2 bg-orange-100 rounded-lg text-orange-600"><Calendar size={28} /></div>
+            Exam Scheduler
+        </h1>
+        <button onClick={loadBatchExams} className="p-2 bg-white border rounded-full hover:bg-gray-50 text-gray-500 hover:text-blue-600 transition-colors" title="Refresh List">
+            <RefreshCw size={20} className={fetchLoading ? "animate-spin" : ""} />
+        </button>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         {/* Left: Configuration Form */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           
           {/* Step 1: Select Batch */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-              <Users size={20} /> 1. Select Target Batch
+              <div className="w-8 h-8 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center text-sm font-bold">1</div>
+              Select Target Batch
             </h2>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Program</label>
+                <label className="label">Program</label>
                 <select 
-                  className="w-full p-2 border rounded-lg bg-gray-50"
+                  className="input"
                   value={batch.program}
                   onChange={(e) => setBatch({...batch, program: e.target.value})}
                 >
                   <option>MPHW</option>
                   <option>MLT</option>
+                  <option>GNM</option>
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-600 mb-1">Admission Year</label>
+                <label className="label">Admission Year</label>
                 <input 
                   type="number" 
-                  className="w-full p-2 border rounded-lg bg-gray-50"
+                  className="input"
                   value={batch.admissionYear}
                   onChange={(e) => setBatch({...batch, admissionYear: e.target.value})}
                 />
@@ -86,48 +124,49 @@ const AdminExamManager = () => {
           </div>
 
           {/* Step 2: Exam Details */}
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+          <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
             <h2 className="text-lg font-bold text-gray-700 mb-4 flex items-center gap-2">
-              <Plus size={20} /> 2. Exam Details
+              <div className="w-8 h-8 rounded-full bg-orange-50 text-orange-600 flex items-center justify-center text-sm font-bold">2</div>
+              Exam Details
             </h2>
-            <form onSubmit={handlePublishExam} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+            <form onSubmit={handlePublishExam} className="space-y-5">
+              <div className="grid grid-cols-2 gap-5">
                 <div className="col-span-2">
-                  <label className="block text-sm text-gray-600">Subject Name</label>
-                  <input required className="w-full p-2 border rounded-lg" value={examDetails.subject} onChange={e => setExamDetails({...examDetails, subject: e.target.value})} />
+                  <label className="label">Subject Name</label>
+                  <input required className="input" placeholder="e.g. Anatomy & Physiology" value={examDetails.subject} onChange={e => setExamDetails({...examDetails, subject: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600">Date</label>
-                  <input type="date" required className="w-full p-2 border rounded-lg" value={examDetails.examDate} onChange={e => setExamDetails({...examDetails, examDate: e.target.value})} />
+                  <label className="label">Date</label>
+                  <input type="date" required className="input" value={examDetails.examDate} onChange={e => setExamDetails({...examDetails, examDate: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600">Type</label>
-                  <select className="w-full p-2 border rounded-lg" value={examDetails.examType} onChange={e => setExamDetails({...examDetails, examType: e.target.value})}>
+                  <label className="label">Exam Type</label>
+                  <select className="input" value={examDetails.examType} onChange={e => setExamDetails({...examDetails, examType: e.target.value})}>
                     <option>Theory</option>
                     <option>Practical</option>
                     <option>Viva</option>
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600">Start Time</label>
-                  <input type="time" className="w-full p-2 border rounded-lg" value={examDetails.startTime} onChange={e => setExamDetails({...examDetails, startTime: e.target.value})} />
+                  <label className="label">Start Time</label>
+                  <input type="time" className="input" value={examDetails.startTime} onChange={e => setExamDetails({...examDetails, startTime: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600">End Time</label>
-                  <input type="time" className="w-full p-2 border rounded-lg" value={examDetails.endTime} onChange={e => setExamDetails({...examDetails, endTime: e.target.value})} />
+                  <label className="label">End Time</label>
+                  <input type="time" className="input" value={examDetails.endTime} onChange={e => setExamDetails({...examDetails, endTime: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600">Room No</label>
-                  <input className="w-full p-2 border rounded-lg" value={examDetails.roomNo} onChange={e => setExamDetails({...examDetails, roomNo: e.target.value})} />
+                  <label className="label">Room No</label>
+                  <input className="input" placeholder="e.g. Hall-A" value={examDetails.roomNo} onChange={e => setExamDetails({...examDetails, roomNo: e.target.value})} />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-600">Max Marks</label>
-                  <input type="number" className="w-full p-2 border rounded-lg" value={examDetails.maxMarks} onChange={e => setExamDetails({...examDetails, maxMarks: e.target.value})} />
+                  <label className="label">Max Marks</label>
+                  <input type="number" className="input" value={examDetails.maxMarks} onChange={e => setExamDetails({...examDetails, maxMarks: e.target.value})} />
                 </div>
               </div>
 
               <div className="pt-4">
-                <button disabled={loading} className="w-full bg-orange-600 text-white font-bold py-3 rounded-xl hover:bg-orange-700 flex justify-center items-center gap-2 transition-all">
+                <button disabled={loading} className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 flex justify-center items-center gap-2 transition-all shadow-lg shadow-orange-200">
                   {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
                   Publish Exam Schedule
                 </button>
@@ -137,20 +176,96 @@ const AdminExamManager = () => {
         </div>
 
         {/* Right: Info Panel */}
-        <div className="bg-orange-50 border border-orange-100 p-6 rounded-xl h-fit">
-          <h3 className="text-orange-900 font-bold mb-2">How this works</h3>
-          <p className="text-orange-800 text-sm leading-relaxed mb-4">
-            This tool allows you to create an exam event and automatically assign it to every student in the selected batch.
-          </p>
-          <ul className="text-orange-800 text-sm list-disc pl-4 space-y-2">
-            <li>Select the Program (e.g., MPHW) and Year (e.g., 2023).</li>
-            <li>Fill in the exam details (Subject, Date, Time).</li>
-            <li>Click <strong>Publish</strong>.</li>
-            <li>The system will find all students matching that batch and add this exam to their individual schedule.</li>
-          </ul>
+        <div className="space-y-6">
+            <div className="bg-orange-50 border border-orange-100 p-6 rounded-2xl h-fit sticky top-6">
+            <h3 className="text-orange-900 font-bold mb-2">How this works</h3>
+            <p className="text-orange-800 text-sm leading-relaxed mb-4">
+                This tool allows you to create an exam event and automatically assign it to every student in the selected batch.
+            </p>
+            <ul className="text-orange-800 text-sm list-disc pl-4 space-y-2 marker:text-orange-400">
+                <li>Select the <b>Program</b> and <b>Year</b> first.</li>
+                <li>Fill in the details.</li>
+                <li>Click <b>Publish</b>.</li>
+                <li>The system will find matching students and insert the exam record into their profiles.</li>
+            </ul>
+            </div>
         </div>
 
       </div>
+
+      {/* --- SCHEDULED EXAMS LIST --- */}
+      <div className="mt-12 animate-fade-in-up">
+        <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center gap-2">
+            <CheckCircle className="text-green-600" size={24}/> 
+            Scheduled Exams for {batch.program} - {batch.admissionYear}
+        </h2>
+        
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+            {fetchLoading ? (
+                <div className="p-20 flex justify-center">
+                    <Loader2 className="animate-spin text-blue-600" size={32} />
+                </div>
+            ) : scheduledExams.length === 0 ? (
+                <div className="p-12 text-center text-gray-400">
+                    <Calendar size={48} className="mx-auto mb-3 opacity-20"/>
+                    <p>No exams found for this batch yet.</p>
+                </div>
+            ) : (
+                <table className="w-full text-left border-collapse">
+                    <thead>
+                        <tr className="bg-gray-50 border-b border-gray-100 text-xs uppercase font-bold text-gray-500">
+                            <th className="p-4 pl-6">Date</th>
+                            <th className="p-4">Subject</th>
+                            <th className="p-4">Time</th>
+                            <th className="p-4">Type</th>
+                            <th className="p-4">Room</th>
+                            <th className="p-4">Students Assigned</th>
+                            {/* <th className="p-4 text-center">Actions</th> */}
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                        {scheduledExams.map((exam, idx) => {
+                            // SAFE ACCESS: Handle nested _id from aggregation
+                            const examDate = exam._id?.examDate;
+                            const subject = exam._id?.subject || "Unknown";
+                            const type = exam._id?.examType || "Theory";
+
+                            return (
+                                <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                    <td className="p-4 pl-6 font-medium text-gray-700">
+                                        {examDate ? new Date(examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                    </td>
+                                    <td className="p-4 font-bold text-gray-800">{subject}</td>
+                                    <td className="p-4 text-sm text-gray-600 flex items-center gap-1">
+                                        <Clock size={14} className="text-gray-400"/>
+                                        {exam.startTime || '--:--'} - {exam.endTime || '--:--'}
+                                    </td>
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${type === 'Theory' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
+                                            {type}
+                                        </span>
+                                    </td>
+                                    <td className="p-4 text-sm text-gray-600">{exam.roomNo || 'TBA'}</td>
+                                    <td className="p-4">
+                                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold">
+                                            {exam.studentCount} Students
+                                        </span>
+                                    </td>
+                                    {/* 
+                                    <td className="p-4 text-center flex justify-center gap-2">
+                                        <button className="text-gray-400 hover:text-blue-600 p-1"><Edit size={16}/></button>
+                                        <button className="text-gray-400 hover:text-red-600 p-1"><Trash2 size={16}/></button>
+                                    </td> 
+                                    */}
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+            )}
+        </div>
+      </div>
+
     </div>
   );
 };
