@@ -3,6 +3,7 @@
 const express = require('express');
 const router = express.Router();
 const Application = require('../models/Application');
+const Notification = require('../models/Notification'); // Import Notification Model
 
 // POST: Submit Application
 router.post('/', async (req, res) => {
@@ -17,11 +18,24 @@ router.post('/', async (req, res) => {
       name,
       email,
       phone,
-      course, // Optional
-      status: 'Pending' // Default status
+      course, 
+      status: 'Pending'
     });
 
     await newApplication.save();
+
+    // --- NEW: Create Notification ---
+    const newNotif = new Notification({
+        title: 'New Admission Inquiry',
+        message: `${name} has applied for ${course || 'a course'}.`,
+        type: 'admission'
+    });
+    await newNotif.save();
+
+    // --- NEW: Emit Socket Event ---
+    const io = req.app.get('io');
+    io.emit('new-notification', newNotif);
+
     res.status(201).json({ status: 'success', message: 'Application submitted successfully!' });
 
   } catch (error) {
@@ -41,12 +55,11 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PUT: Update Application Status (NEW)
+// PUT: Update Application Status
 router.put('/:id', async (req, res) => {
   const { status } = req.body;
-
-  // Validate status
   const validStatuses = ['Pending', 'Interested', 'Not Interested'];
+  
   if (!status || !validStatuses.includes(status)) {
     return res.status(400).json({ message: 'Invalid status value' });
   }
@@ -55,11 +68,10 @@ router.put('/:id', async (req, res) => {
     const app = await Application.findByIdAndUpdate(
       req.params.id, 
       { status: status },
-      { new: true } // Return the updated document
+      { new: true }
     );
 
     if (!app) return res.status(404).json({ message: 'Application not found' });
-
     res.json({ status: 'success', data: app });
   } catch (error) {
     console.error("Update Error:", error);

@@ -47,7 +47,7 @@ const FeeReports = lazy(() => import("../pages/admin/fees/FeeReports"));
 
 // Old Admin Fee Manager (Legacy)
 const AdminFeeManager = lazy(() => import("../pages/admin/AdminFeeManager"));
-
+const AdminSettings = lazy(() => import("../pages/admin/AdminSettings"));
 // Student Specific Admin Views
 const StudentFeeManager = lazy(() => import("../pages/admin/StudentFeeManager"));
 const StudentAcademicManager = lazy(() => import("../pages/admin/StudentAcademicManager"));
@@ -125,7 +125,7 @@ const AppRoutes = () => {
           {/* Fee Management System */}
           <Route path="fees/dashboard" element={<FeeDashboard />} />
           <Route path="fees/structure" element={<FeeStructure />} />
-          
+               <Route path="settings" element={<AdminSettings />} />
           {/* UPDATED ROUTE PATH */}
           <Route path="fees/generator" element={<StudentFeeGenerator />} />
           

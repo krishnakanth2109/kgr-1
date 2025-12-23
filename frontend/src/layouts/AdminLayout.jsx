@@ -1,4 +1,3 @@
-// --- START OF FILE src/layouts/AdminLayout.jsx ---
 import React, { useState } from "react";
 import { Link, Outlet, useNavigate, useLocation } from "react-router-dom";
 import {
@@ -18,7 +17,8 @@ import {
   AlertCircle,
   FileBarChart,
   MessageSquare,
-  ClipboardList // Imported new icon for Admissions
+  ClipboardList,
+  Settings // <-- IMPORT SETTINGS ICON
 } from "lucide-react";
 
 const AdminLayout = () => {
@@ -57,13 +57,13 @@ const AdminLayout = () => {
 
         <nav className="flex-1 p-4 space-y-2 overflow-y-auto custom-scrollbar">
           
-          {!isCollapsed && <p className="text-xs font-semibold text-gray-400 uppercase mt-2 mb-1 px-2">General</p>}
+          {/* ... [KEEP ALL YOUR EXISTING LINKS HERE] ... */}
+          
           <Link to="/admin/dashboard" className={linkClass('/admin/dashboard')}>
             <LayoutDashboard size={20} />
             {!isCollapsed && <span>Dashboard</span>}
           </Link>
 
-          {/* --- ADDED ADMISSIONS LINK HERE --- */}
           <Link to="/admin/admissions" className={linkClass('/admin/admissions')}>
             <ClipboardList size={20} />
             {!isCollapsed && <span>Admissions</span>}
@@ -74,8 +74,9 @@ const AdminLayout = () => {
             {!isCollapsed && <span>Students</span>}
           </Link>
 
+          {/* ... [Fee Management Section] ... */}
           {!isCollapsed && <p className="text-xs font-semibold text-gray-400 uppercase mt-4 mb-1 px-2">Fee Management</p>}
-          {/* ... Rest of your fee links ... */}
+          
           <Link to="/admin/fees/dashboard" className={linkClass('/admin/fees/dashboard')}>
             <IndianRupee size={20} />
             {!isCollapsed && <span>Fee Dashboard</span>}
@@ -84,18 +85,16 @@ const AdminLayout = () => {
             <Layers size={20} />
             {!isCollapsed && <span>Fee Structure</span>}
           </Link>
-          
-          {/* UPDATED LINK PATH */}
           <Link to="/admin/fees/generator" className={linkClass('/admin/fees/generator')}>
             <LinkIcon size={20} />
             {!isCollapsed && <span>Student Fee Generator</span>}
           </Link>
-      
           <Link to="/admin/fees/reports" className={linkClass('/admin/fees/reports')}>
             <FileBarChart size={20} />
             {!isCollapsed && <span>Reports & Analytics</span>}
           </Link>
 
+          {/* ... [Academics Section] ... */}
           {!isCollapsed && <p className="text-xs font-semibold text-gray-400 uppercase mt-4 mb-1 px-2">Academics</p>}
           <Link to="/admin/exams" className={linkClass('/admin/exams')}>
             <Calendar size={20} />
@@ -110,6 +109,7 @@ const AdminLayout = () => {
             {!isCollapsed && <span>Courses</span>}
           </Link>
 
+          {/* ... [Content Section] ... */}
           {!isCollapsed && <p className="text-xs font-semibold text-gray-400 uppercase mt-4 mb-1 px-2">Content</p>}
           <Link to="/admin/documents" className={linkClass('/admin/documents')}>
             <FileText size={20} />
@@ -123,6 +123,14 @@ const AdminLayout = () => {
             <MessageSquare size={20} />
             {!isCollapsed && <span>Contact Messages</span>}
           </Link>
+
+          {/* --- NEW SETTINGS LINK --- */}
+          {!isCollapsed && <p className="text-xs font-semibold text-gray-400 uppercase mt-4 mb-1 px-2">System</p>}
+          <Link to="/admin/settings" className={linkClass('/admin/settings')}>
+            <Settings size={20} />
+            {!isCollapsed && <span>Settings</span>}
+          </Link>
+
         </nav>
 
         <div className="p-4 border-t bg-gray-50">

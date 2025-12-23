@@ -32,7 +32,7 @@ const AdminExamManager = () => {
         setScheduledExams(data || []);
     } catch (err) {
         console.error("Failed to load exams", err);
-        // alert("Failed to load existing exams. Check console.");
+        alert("Failed to load existing exams. Check console for details.");
     } finally {
         setFetchLoading(false);
     }
@@ -166,7 +166,7 @@ const AdminExamManager = () => {
               </div>
 
               <div className="pt-4">
-                <button disabled={loading} className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 flex justify-center items-center gap-2 transition-all shadow-lg shadow-orange-200">
+                <button disabled={loading} className="w-full bg-orange-600 text-white font-bold py-4 rounded-xl hover:bg-orange-700 flex justify-center items-center gap-2 transition-all shadow-lg shadow-orange-200 disabled:opacity-50 disabled:cursor-not-allowed">
                   {loading ? <Loader2 className="animate-spin" /> : <Save size={20} />}
                   Publish Exam Schedule
                 </button>
@@ -219,44 +219,40 @@ const AdminExamManager = () => {
                             <th className="p-4">Time</th>
                             <th className="p-4">Type</th>
                             <th className="p-4">Room</th>
+                            <th className="p-4">Max Marks</th>
                             <th className="p-4">Students Assigned</th>
-                            {/* <th className="p-4 text-center">Actions</th> */}
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-50">
                         {scheduledExams.map((exam, idx) => {
-                            // SAFE ACCESS: Handle nested _id from aggregation
-                            const examDate = exam._id?.examDate;
-                            const subject = exam._id?.subject || "Unknown";
-                            const type = exam._id?.examType || "Theory";
-
+                            // UPDATED: Now accessing flat properties directly
                             return (
                                 <tr key={idx} className="hover:bg-gray-50 transition-colors">
                                     <td className="p-4 pl-6 font-medium text-gray-700">
-                                        {examDate ? new Date(examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
+                                        {exam.examDate ? new Date(exam.examDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}
                                     </td>
-                                    <td className="p-4 font-bold text-gray-800">{subject}</td>
+                                    <td className="p-4 font-bold text-gray-800">{exam.subject || 'Unknown'}</td>
                                     <td className="p-4 text-sm text-gray-600 flex items-center gap-1">
                                         <Clock size={14} className="text-gray-400"/>
                                         {exam.startTime || '--:--'} - {exam.endTime || '--:--'}
                                     </td>
                                     <td className="p-4">
-                                        <span className={`px-2 py-1 rounded text-xs font-bold ${type === 'Theory' ? 'bg-blue-50 text-blue-700' : 'bg-purple-50 text-purple-700'}`}>
-                                            {type}
+                                        <span className={`px-2 py-1 rounded text-xs font-bold ${
+                                            exam.examType === 'Theory' ? 'bg-blue-50 text-blue-700' : 
+                                            exam.examType === 'Practical' ? 'bg-purple-50 text-purple-700' :
+                                            'bg-pink-50 text-pink-700'
+                                        }`}>
+                                            {exam.examType || 'Theory'}
                                         </span>
                                     </td>
                                     <td className="p-4 text-sm text-gray-600">{exam.roomNo || 'TBA'}</td>
+                                    <td className="p-4 text-sm font-semibold text-gray-700">{exam.maxMarks || 100}</td>
                                     <td className="p-4">
-                                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold">
-                                            {exam.studentCount} Students
+                                        <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 w-fit">
+                                            <Users size={12}/>
+                                            {exam.studentCount || 0}
                                         </span>
                                     </td>
-                                    {/* 
-                                    <td className="p-4 text-center flex justify-center gap-2">
-                                        <button className="text-gray-400 hover:text-blue-600 p-1"><Edit size={16}/></button>
-                                        <button className="text-gray-400 hover:text-red-600 p-1"><Trash2 size={16}/></button>
-                                    </td> 
-                                    */}
                                 </tr>
                             );
                         })}

@@ -55,7 +55,7 @@ router.post('/bulk/create', authMiddleware, async (req, res) => {
 });
 
 // URL: GET /api/exams/batch?program=MPHW&year=2024
-// MOVED UP to prevent conflict with /:studentId
+// UPDATED: Flatten the aggregation result for easier frontend consumption
 router.get('/batch', authMiddleware, async (req, res) => {
     const { program, year } = req.query;
 
@@ -69,7 +69,7 @@ router.get('/batch', authMiddleware, async (req, res) => {
         if (studentIds.length === 0) return res.json([]);
 
         // 2. Find exams linked to these students
-        // We group by subject/date/type to show unique exam events
+        // UPDATED: Project fields at the top level instead of nested _id
         const exams = await StudentExam.aggregate([
             { $match: { student: { $in: studentIds } } },
             {
@@ -79,10 +79,24 @@ router.get('/batch', authMiddleware, async (req, res) => {
                     endTime: { $first: "$endTime" },
                     roomNo: { $first: "$roomNo" },
                     maxMarks: { $first: "$maxMarks" },
-                    studentCount: { $sum: 1 } // Count how many students have this exam
+                    studentCount: { $sum: 1 }
                 }
             },
-            { $sort: { "_id.examDate": 1 } } // Sort by date ascending
+            {
+                // ADDED: Project to flatten the structure
+                $project: {
+                    _id: 0,
+                    subject: "$_id.subject",
+                    examDate: "$_id.examDate",
+                    examType: "$_id.examType",
+                    startTime: 1,
+                    endTime: 1,
+                    roomNo: 1,
+                    maxMarks: 1,
+                    studentCount: 1
+                }
+            },
+            { $sort: { examDate: 1 } } // Sort by date ascending
         ]);
 
         res.json(exams);

@@ -15,14 +15,13 @@ import {
   CalendarClock, 
   BookOpen,      
   Bell,
-  User // Import User Icon
+  User 
 } from 'lucide-react';
 
 const StudentSidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   
-  // Safe parsing of user data
   const student = JSON.parse(sessionStorage.getItem('student-user') || '{}');
   
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -47,7 +46,6 @@ const StudentSidebar = () => {
 
   const sidebarWidth = isCollapsed ? 'w-20' : 'w-72';
   
-  // Dynamic classes for links
   const linkClasses = ({ isActive }) =>
     `relative flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-300 group overflow-hidden ${
       isActive
@@ -116,7 +114,6 @@ const StudentSidebar = () => {
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Dashboard</span>}
         </NavLink>
 
-        {/* --- Profile Link --- */}
         <NavLink to="/student/profile" className={linkClasses}>
           <User size={20} className="shrink-0" />
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">My Profile</span>}
@@ -137,7 +134,7 @@ const StudentSidebar = () => {
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Resources</span>}
         </NavLink>
 
-        {/* --- Finance Section --- */}
+        {/* Finance Section */}
         <div className="flex flex-col gap-1">
           <button
             onClick={() => {
@@ -186,6 +183,7 @@ const StudentSidebar = () => {
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Documents</span>}
         </NavLink>
 
+        {/* Notifications Link */}
         <NavLink to="/student/notifications" className={linkClasses}>
           <Bell size={20} className="shrink-0" />
           {!isCollapsed && <span className="font-medium truncate animate-fadeIn">Notifications</span>}

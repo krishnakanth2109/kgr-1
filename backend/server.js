@@ -1,31 +1,52 @@
 // --- START OF FILE server.js ---
-
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const http = require('http'); // Import HTTP
+const { Server } = require('socket.io'); // Import Socket.io
 require('dotenv').config();
 
 const app = express();
+const server = http.createServer(app); // Create HTTP server
 
 // --- 1. CORS Configuration ---
-// Allows requests from your local frontend and deployed site
+const allowedOrigins = [
+  "http://localhost:3000",
+  "http://localhost:5173",
+  "https://kgr-college.netlify.app"
+];
+
 app.use(cors({
-  origin: [
-    "http://localhost:3000",              // React Local
-    "http://localhost:5173",              // Vite Local
-    "https://kgr-college.netlify.app"     // Deployed Frontend
-  ],
+  origin: allowedOrigins,
   credentials: true
 }));
 
+// Initialize Socket.io
+const io = new Server(server, {
+  cors: {
+    origin: allowedOrigins,
+    methods: ["GET", "POST"],
+    credentials: true
+  }
+});
+
+// Store io instance in app to use in routes
+app.set('io', io);
+
+// Socket Connection Logic
+io.on('connection', (socket) => {
+  console.log('⚡ New client connected:', socket.id);
+  socket.on('disconnect', () => {
+    console.log('Client disconnected:', socket.id);
+  });
+});
+
 // --- 2. Middleware ---
-// Increased limits to handle Base64 image uploads if necessary
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // --- 3. MongoDB Connection ---
 const dbURI = process.env.MONGO_URI;
-
 mongoose.connect(dbURI, { 
     useNewUrlParser: true, 
     useUnifiedTopology: true 
@@ -33,36 +54,27 @@ mongoose.connect(dbURI, {
 .then(() => console.log('✅ MongoDB connection established successfully!'))
 .catch((err) => { 
     console.error('❌ MongoDB connection error:', err); 
-    process.exit(1); // Exit process with failure
+    process.exit(1);
 });
 
 // --- 4. API Routes ---
-
-// General & Auth Routes
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/admin', require('./routes/admin'));
 app.use('/api/contact', require('./routes/contact'));
 app.use('/api/gallery', require('./routes/gallery'));
 app.use('/api/courses', require('./routes/courses'));
 app.use('/api/admissions', require('./routes/admissions'));
-
-// Academic Management Routes
 app.use('/api/students', require('./routes/students'));
 app.use('/api/faculty', require('./routes/faculty'));
-
-// --- FEE MANAGEMENT SYSTEM (CRITICAL FOR NEW FEATURES) ---
-// 1. Fee Structures: Defines templates like "MPHW 2024-25" (Year 1, 2, 3 breakdown)
 app.use('/api/fee-structures', require('./routes/feeStructureRoutes')); 
-
-// 2. Student Fees: Handles individual student mappings, payments, and dues
 app.use('/api/student-fees', require('./routes/studentFees')); 
-
-// Student Academic Extras (Exams & Documents)
 app.use('/api/documents', require('./routes/studentDocuments'));
 app.use('/api/exams', require('./routes/studentExams')); 
+// NEW: Notifications Route
+app.use('/api/notifications', require('./routes/notifications')); 
 
-// --- 5. Start Server ---
+// --- 5. Start Server (Use server.listen instead of app.listen) ---
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
+server.listen(PORT, () => {
+  console.log(`🚀 Server with WebSockets is running on port ${PORT}`);
 });

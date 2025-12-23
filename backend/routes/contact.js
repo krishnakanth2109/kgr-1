@@ -1,14 +1,11 @@
+// --- START OF FILE backend/routes/contact.js ---
 
 const express = require('express');
 const router = express.Router();
 const Contact = require('../models/contact');
+const Notification = require('../models/Notification'); // Import Notification Model
 
-// @route   POST /api/contact
-// @desc    Create a new contact message
-// @access  Public
-// @route   GET /api/contact
-// @desc    Get all messages
-// @access  Private (Admin)
+// GET all messages
 router.get('/', async (req, res) => {
   try {
     const messages = await Contact.find().sort({ _id: -1 });
@@ -19,6 +16,7 @@ router.get('/', async (req, res) => {
   }
 });
 
+// POST new message
 router.post('/', async (req, res) => {
   const { fullName, email, message } = req.body;
 
@@ -29,8 +27,21 @@ router.post('/', async (req, res) => {
       message
     });
 
-    const contact = await newContact.save();
-    res.json(contact);
+    await newContact.save();
+
+    // --- NEW: Create Notification ---
+    const newNotif = new Notification({
+        title: 'New Contact Message',
+        message: `Message from ${fullName}: ${message.substring(0, 30)}...`,
+        type: 'contact'
+    });
+    await newNotif.save();
+
+    // --- NEW: Emit Socket Event ---
+    const io = req.app.get('io');
+    io.emit('new-notification', newNotif);
+
+    res.json(newContact);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
