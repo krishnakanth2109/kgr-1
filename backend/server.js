@@ -8,7 +8,7 @@ require('dotenv').config();
 
 const app = express();
 const server = http.createServer(app); // Create HTTP server
-
+const uploadRoutes = require('./routes/upload');
 // --- 1. CORS Configuration ---
 const allowedOrigins = [
   "http://localhost:3000",
@@ -72,7 +72,7 @@ app.use('/api/documents', require('./routes/studentDocuments'));
 app.use('/api/exams', require('./routes/studentExams')); 
 // NEW: Notifications Route
 app.use('/api/notifications', require('./routes/notifications')); 
-
+app.use('/api/upload', uploadRoutes);
 // --- 5. Start Server (Use server.listen instead of app.listen) ---
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {

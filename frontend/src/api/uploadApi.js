@@ -1,34 +1,26 @@
-// --- START OF FILE api/uploadApi.js ---
-import axios from 'axios';
+import api from './api'; // Use your configured axios instance
 
-// --- IMPORTANT: ADD YOUR CLOUDINARY DETAILS HERE ---
-const CLOUD_NAME = "YOUR_CLOUD_NAME";
-const UPLOAD_PRESET = "YOUR_UPLOAD_PRESET"; // Create an Unsigned preset in Cloudinary
-
-// This function uploads a file and calls onProgress with the upload percentage
 export const uploadFile = async (file, onProgress) => {
   const formData = new FormData();
-  formData.append('file', file);
-  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('image', file); // Multer expects field name 'image'
 
   try {
-    const response = await axios.post(
-      `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`,
-      formData,
-      {
-        headers: { 'Content-Type': 'multipart/form-data' },
-        onUploadProgress: (progressEvent) => {
-          const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
-          if (onProgress) {
-            onProgress(percent);
-          }
-        },
-      }
-    );
-    // Return the secure URL of the uploaded file
-    return response.data.secure_url;
+    // We need a generic upload endpoint on your backend.
+    // Since you don't have a standalone upload route yet, we'll create one below.
+    const response = await api.post('/upload', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      onUploadProgress: (progressEvent) => {
+        const percent = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+        if (onProgress) {
+          onProgress(percent);
+        }
+      },
+    });
+    
+    // Assuming backend returns { url: "..." }
+    return response.data.url; 
   } catch (error) {
-    console.error("Cloudinary Upload Error:", error);
+    console.error("Backend Upload Error:", error);
     throw new Error("File upload failed.");
   }
 };

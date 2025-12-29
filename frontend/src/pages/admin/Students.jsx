@@ -7,9 +7,8 @@ import {
   Plus, Edit3, Trash2, Search, ArrowLeft, Printer, Save, 
   User, MapPin, BookOpen, CreditCard, Loader2, GraduationCap, 
   Key, Check, AlertCircle, Phone, Calendar, Mail, FileText,
-  BadgeCheck, School, UploadCloud, Image as ImageIcon, Eye, X
+  BadgeCheck, School, UploadCloud, Eye, X
 } from 'lucide-react';
-import * as XLSX from 'xlsx'; // Optional: If you use export
 
 const Students = () => {
   const [view, setView] = useState('list'); 
@@ -131,7 +130,7 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
       <div className="relative flex-1 group w-full">
         <Search className="absolute left-5 top-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" size={20} />
         <input 
-          type="text" placeholder="Search by Name, Ad. No, Email or Mobile..." value={filters.search}
+          type="text" placeholder="Search by Name, Roll No, Email or Mobile..." value={filters.search}
           onChange={(e) => setFilters({...filters, search: e.target.value})}
           className="w-full pl-14 pr-4 py-4 bg-transparent rounded-xl focus:bg-slate-50 outline-none transition-all placeholder:text-slate-400 font-medium text-lg"
         />
@@ -165,8 +164,9 @@ const ListView = ({ students, loading, filters, setFilters, onCreate, onEdit, on
                 <tr key={s._id} className="hover:bg-indigo-50/30 transition-colors duration-200 group">
                   <td className="p-6 pl-8">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-300">
-                        {dName[0]}
+                      <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center font-bold text-xl shadow-lg shadow-indigo-200 group-hover:scale-110 transition-transform duration-300 overflow-hidden">
+                         {/* Show Photo if available */}
+                         {s.photo_url ? <img src={s.photo_url} alt="pic" className="w-full h-full object-cover"/> : dName[0]}
                       </div>
                       <div>
                           <div className="font-bold text-slate-800 text-lg">{dName}</div>
@@ -228,6 +228,7 @@ const ActionButton = ({ icon, onClick, className, tooltip }) => (
 const FormView = ({ initialData, onCancel, onSuccess }) => {
   const [formData, setFormData] = useState({
     academic_year: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+    admission_number: '', // Added for Manual Roll Number
     password: '', 
     course_type: '', course_name: '',
     student_name: '', father_name: '', mother_name: '', dob: '', age: '', gender: '', email: '',
@@ -298,14 +299,23 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
 
     try {
       const url = await uploadFile(file, setProgress);
-      setFormData(prev => ({ ...prev, [fieldName]: url }));
+      // Ensure we update the state with the returned URL string
+      setFormData(prev => {
+        const updated = { ...prev, [fieldName]: url };
+        console.log(`Updated ${fieldName} to:`, url); // Debug
+        return updated;
+      });
       setProgress(100);
-    } catch (error) { setProgress(-1); }
+    } catch (error) { 
+        console.error("Upload Error:", error);
+        setProgress(-1); 
+    }
   };
 
   const validate = () => {
     let newErrors = {};
     if (!formData.student_name) newErrors.student_name = "Required";
+    if (!formData.admission_number) newErrors.admission_number = "Required"; // Added validation for ID
     if (!formData.father_name) newErrors.father_name = "Required";
     if (!formData.course_type) newErrors.course_type = "Required";
     if (!formData.course_name) newErrors.course_name = "Required";
@@ -367,7 +377,15 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
              <SectionCard title="Course & System" icon={<Key size={20} className="text-amber-500"/>} color="amber">
                 <div className="space-y-6">
                    <div className="grid grid-cols-2 gap-4">
-                      <ModernInput label="Student ID" value={initialData ? initialData.admission_number : "Auto-Generated"} disabled icon={<BadgeCheck size={18}/>} />
+                      {/* UPDATED: Manual Roll Number Input */}
+                      <ModernInput 
+                        label="Roll Number *" 
+                        name="admission_number" 
+                        value={formData.admission_number} 
+                        onChange={handleChange} 
+                        error={errors.admission_number}
+                        icon={<BadgeCheck size={18}/>} 
+                      />
                       <ModernInput label="Password" name="password" value={formData.password} onChange={handleChange} placeholder={initialData ? "Hidden" : "student123"} icon={<Key size={18}/>} />
                    </div>
                    <div className="grid grid-cols-2 gap-4">
@@ -380,7 +398,8 @@ const FormView = ({ initialData, onCancel, onSuccess }) => {
                         </div>
                       }
                    </div>
-                   {/* FILE UPLOAD HERE */}
+                   
+                   {/* FILE UPLOAD: Profile Pic */}
                    <ModernFileInput 
                       label="Student Photo (Passport Size)" 
                       fieldName="photo_url"
@@ -560,7 +579,7 @@ const ModernFileInput = ({ label, fieldName, currentUrl, onUpload }) => {
 
 /* ==========================
    CREDENTIALS MODAL, PROFILE POPUP & PRINT VIEW
-   (Keeping previous code components as they were)
+   (Keeping existing code components as they were)
    ========================== */
 
 const CredentialsModal = ({ data, onClose, onPrint }) => (
@@ -578,7 +597,7 @@ const CredentialsModal = ({ data, onClose, onPrint }) => (
       <div className="p-8 space-y-6">
         <div className="bg-slate-50 border border-slate-200 rounded-2xl p-6 space-y-4 shadow-inner">
            <div className="flex justify-between items-center border-b border-slate-200 pb-3">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Student ID</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Roll Number</span>
               <span className="text-2xl font-mono font-bold text-indigo-600 tracking-tight">{data.id}</span>
            </div>
            <div className="flex justify-between items-center">
@@ -715,7 +734,7 @@ const PrintView = ({ student, onBack }) => {
 
         <div className="flex justify-between items-start mb-12 relative z-10">
            <div className="space-y-3">
-              <InfoRow label="Admission No" value={student.admission_number} big />
+              <InfoRow label="Roll Number" value={student.admission_number} big />
               <InfoRow label="Academic Year" value={student.academic_year || student.admission_year} />
               <InfoRow label="Course Applied" value={`${student.course_type} ${student.course_name ? '- ' + student.course_name : ''}`} bold />
               <InfoRow label="Date of Issue" value={today} />
