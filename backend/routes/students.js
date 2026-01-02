@@ -1,45 +1,89 @@
-// --- START OF FILE students.js ---
 const express = require('express');
 const router = express.Router();
 const Student = require('../models/Student'); 
+// Added this import because it is used in the /batch route at the bottom
+const StudentExam = require('../models/StudentExam'); 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const authMiddleware = require('../middleware/authMiddleware'); 
 require('dotenv').config();
 
+// ==========================================
+//  AUTOMATIC FIX: DROP OLD INDEXES (RUNS ON START)
+//  This deletes the "zombie" index causing the duplicate error.
+// ==========================================
+try {
+    Student.collection.dropIndex('roll_number_1')
+        .then(() => console.log("✅ SUCCESS: Old 'roll_number' index dropped! You can now create students."))
+        .catch((err) => {
+            // Code 27 means the index is already gone, which is fine.
+            if (err.code !== 27) console.log("Index cleanup status:", err.message);
+        });
+} catch (e) {
+    console.log("Index cleanup skipped.");
+}
+
+// Helper: Remove empty strings/nulls to prevent MongoDB Unique Index errors
 const cleanStudentData = (data) => {
     const cleaned = { ...data };
-    const optionalUniqueFields = ['email', 'student_aadhar', 'admission_number'];
+    
+    // 1. Force Trim Admission Number if it exists
+    if (cleaned.admission_number && typeof cleaned.admission_number === 'string') {
+        cleaned.admission_number = cleaned.admission_number.trim();
+    }
+
+    // 2. Handle Optional Unique Fields
+    // REMOVED 'admission_number' from here because it is REQUIRED now.
+    const optionalUniqueFields = ['email', 'student_aadhar'];
     
     optionalUniqueFields.forEach(field => {
         if (!cleaned[field] || (typeof cleaned[field] === 'string' && cleaned[field].trim() === '')) {
             delete cleaned[field];
+        } else if (typeof cleaned[field] === 'string') {
+            cleaned[field] = cleaned[field].trim(); // Trim email/aadhar too
         }
     });
     return cleaned;
 };
 
 // ==========================================
+//  MANUAL FIX ROUTE (Backup option)
+//  URL: http://localhost:5000/api/students/fix-indexes
+// ==========================================
+router.get('/fix-indexes', async (req, res) => {
+    try {
+        await Student.collection.dropIndexes();
+        res.send("All Indexes dropped successfully. MongoDB will rebuild the correct ones on the next save.");
+    } catch (err) {
+        res.status(500).send("Error dropping indexes: " + err.message);
+    }
+});
+
+// ==========================================
 //  CREATE STUDENT (POST)
-//  Logic: Manual Roll Number
 // ==========================================
 router.post('/', authMiddleware, async (req, res) => {
     try {
         const processedData = cleanStudentData(req.body);
 
-        // --- 1. VALIDATION: Check for Manual Roll Number ---
+        // --- 1. VALIDATION ---
         if (!processedData.admission_number) {
             return res.status(400).json({ message: "Roll Number (Admission Number) is required." });
         }
 
-        // --- 2. DUPLICATE CHECKS ---
-        if (processedData.admission_number) {
-            const exists = await Student.findOne({ admission_number: processedData.admission_number });
-            if (exists) return res.status(400).json({ message: `Roll Number '${processedData.admission_number}' already exists.` });
+        // --- 2. DUPLICATE CHECKS (Case Insensitive) ---
+        // Check if Roll Number exists (Case Insensitive)
+        const rollNoExists = await Student.findOne({ 
+            admission_number: { $regex: new RegExp(`^${processedData.admission_number}$`, 'i') } 
+        });
+        if (rollNoExists) {
+            return res.status(400).json({ message: `Roll Number '${processedData.admission_number}' already exists.` });
         }
+
+        // Check if Email exists
         if (processedData.email) {
-            const exists = await Student.findOne({ email: processedData.email });
-            if (exists) return res.status(400).json({ message: 'Email already exists.' });
+            const emailExists = await Student.findOne({ email: processedData.email });
+            if (emailExists) return res.status(400).json({ message: 'Email already exists.' });
         }
 
         // --- 3. PASSWORD HANDLING ---
@@ -61,9 +105,10 @@ router.post('/', authMiddleware, async (req, res) => {
 
     } catch (error) {
         console.error("Create Error:", error);
+        // Handle MongoDB Duplicate Key Error
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
-            return res.status(400).json({ message: `Duplicate data: ${field} already exists.` });
+            return res.status(400).json({ message: `Duplicate data error: The field '${field}' is already in use.` });
         }
         res.status(500).json({ message: error.message || 'Server Error' });
     }
@@ -76,9 +121,16 @@ router.put('/:id', authMiddleware, async (req, res) => {
     try {
         const updateData = cleanStudentData(req.body);
         
-        // Allow updating admission_number if needed, but usually we block it.
-        // If you want to allow changing Roll Number, comment out the next line.
-        // delete updateData.admission_number; 
+        // Prevent changing Roll Number to a duplicate
+        if (updateData.admission_number) {
+            const existingStudent = await Student.findOne({ 
+                admission_number: { $regex: new RegExp(`^${updateData.admission_number}$`, 'i') },
+                _id: { $ne: req.params.id } // Exclude current student
+            });
+            if (existingStudent) {
+                return res.status(400).json({ message: `Roll Number '${updateData.admission_number}' is already taken.` });
+            }
+        }
 
         if (updateData.password && updateData.password.trim() !== "") {
             const salt = await bcrypt.genSalt(10);
@@ -100,7 +152,7 @@ router.put('/:id', authMiddleware, async (req, res) => {
         console.error("Update Error:", error);
         if (error.code === 11000) {
             const field = Object.keys(error.keyPattern)[0];
-            return res.status(400).json({ message: `Error: ${field} already exists.` });
+            return res.status(400).json({ message: `Error: The field '${field}' must be unique.` });
         }
         res.status(500).json({ message: 'Server error' }); 
     }
@@ -134,18 +186,21 @@ router.get('/', async (req, res) => {
 });
 
 // ==========================================
-//  LOGIN, DELETE, BULK DELETE, PROFILE, GET SINGLE
-//  (These remain unchanged but included for completeness)
+//  LOGIN (POST) - FIXED CASE SENSITIVITY
 // ==========================================
-
 router.post('/login', async (req, res) => {
     let { identifier, password } = req.body;
     if (!identifier || !password) return res.status(400).json({ message: 'Missing credentials' });
 
     try {
         identifier = identifier.trim();
+        
+        // UPDATED: Use Regex for Case Insensitive Match on Roll Number
         const student = await Student.findOne({
-            $or: [{ email: identifier.toLowerCase() }, { admission_number: identifier }]
+            $or: [
+                { email: identifier.toLowerCase() },
+                { admission_number: { $regex: new RegExp(`^${identifier}$`, 'i') } } 
+            ]
         });
 
         if (!student) return res.status(400).json({ message: 'Invalid Credentials' });
@@ -169,6 +224,9 @@ router.post('/login', async (req, res) => {
     }
 });
 
+// ==========================================
+//  DELETE SINGLE STUDENT (DELETE)
+// ==========================================
 router.delete('/:id', authMiddleware, async (req, res) => {
     try {
         await Student.findByIdAndDelete(req.params.id);
@@ -176,6 +234,9 @@ router.delete('/:id', authMiddleware, async (req, res) => {
     } catch (err) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// ==========================================
+//  BULK DELETE (POST)
+// ==========================================
 router.post('/bulk-delete', authMiddleware, async (req, res) => {
     try {
         const { ids } = req.body;
@@ -184,6 +245,9 @@ router.post('/bulk-delete', authMiddleware, async (req, res) => {
     } catch (error) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// ==========================================
+//  GET SINGLE STUDENT (GET)
+// ==========================================
 router.get('/:id', authMiddleware, async (req, res) => {
     try {
         const student = await Student.findById(req.params.id);
@@ -192,6 +256,9 @@ router.get('/:id', authMiddleware, async (req, res) => {
     } catch (err) { res.status(500).json({ message: 'Server error' }); }
 });
 
+// ==========================================
+//  GET PROFILE (GET)
+// ==========================================
 router.get('/profile', authMiddleware, async (req, res) => {
     try {
         const studentId = req.student?.id || req.user?.id;
@@ -200,6 +267,64 @@ router.get('/profile', authMiddleware, async (req, res) => {
         if (!studentProfile) return res.status(404).json({ message: 'Student record not found' });
         res.json(studentProfile);
     } catch (err) { res.status(500).json({ message: 'Server Error' }); }
+});
+
+// ==========================================
+//  GET BATCH EXAMS
+// ==========================================
+router.get('/batch', authMiddleware, async (req, res) => {
+    const { program, year } = req.query;
+
+    if (!program || !year) return res.status(400).json({ message: 'Missing program or year' });
+
+    try {
+        // 1. Find students in this batch first
+        const students = await Student.find({ program, admission_year: year }).select('_id');
+        const studentIds = students.map(s => s._id);
+
+        if (studentIds.length === 0) return res.json([]);
+
+        // 2. Find exams linked to these students
+        // Note: Ensure ../models/StudentExam exists and is imported
+        const exams = await StudentExam.aggregate([
+            { $match: { student: { $in: studentIds } } },
+            {
+                $group: {
+                    _id: { 
+                        subject: "$subject", 
+                        examDate: "$examDate", 
+                        examType: "$examType",
+                        startTime: "$startTime",
+                        endTime: "$endTime",
+                        roomNo: "$roomNo",
+                        maxMarks: "$maxMarks"
+                    },
+                    studentCount: { $sum: 1 }
+                }
+            },
+            {
+                $project: {
+                    _id: 0,
+                    subject: "$_id.subject",
+                    examDate: "$_id.examDate",
+                    examType: "$_id.examType",
+                    startTime: "$_id.startTime",
+                    endTime: "$_id.endTime",
+                    roomNo: "$_id.roomNo",
+                    maxMarks: "$_id.maxMarks",
+                    studentCount: 1
+                }
+            },
+            { $sort: { examDate: 1 } }
+        ]);
+
+        console.log(`Found ${exams.length} unique exams for ${program} - ${year}`);
+        res.json(exams);
+
+    } catch (err) {
+        console.error("Batch Exam Fetch Error:", err);
+        res.status(500).json({ message: 'Server Error' });
+    }
 });
 
 module.exports = router;

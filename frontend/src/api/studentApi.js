@@ -1,12 +1,12 @@
 // --- START OF FILE src/api/studentApi.js ---
-import api from './api'; // Imports the central API helper with the token interceptor
+import api from './api'; 
 
 // =========================================================
-// Core Functions (Used by Students.jsx)
+// Core Functions
 // =========================================================
 
 export const fetchStudents = async (params) => {
-    // Axios params automatically handle ?page=1&limit=10...
+    // params handles ?search=...&course_type=...
     const response = await api.get('/students', { params });
     return response.data;
 };
@@ -32,26 +32,24 @@ export const deleteStudent = async (id) => {
 };
 
 export const deleteMultipleStudents = async (data) => {
-    // data structure: { ids: ["id1", "id2"] }
+    // data: { ids: ["id1", "id2"] }
     const response = await api.post('/students/bulk-delete', data);
     return response.data;
 };
 
 // =========================================================
-// Additional Functions (Used by studentQueries.js / Dashboard)
+// Helper Functions
 // =========================================================
 
 export const setStudentStatus = async ({ id, status }) => {
-    const response = await api.patch('/students/status', { id, status });
+    // FIX: Use PUT /students/:id instead of PATCH /students/status
+    // This reuses the existing backend update route.
+    const response = await api.put(`/students/${id}`, { status });
     return response.data;
 };
 
 // =========================================================
-// Aliases (For compatibility with old code)
+// Aliases
 // =========================================================
-
-// If studentQueries.js asks for 'getStudents', we give them 'fetchStudents'
 export const getStudents = fetchStudents; 
-
-// If studentQueries.js asks for 'addStudent', we give them 'createStudent'
 export const addStudent = createStudent;

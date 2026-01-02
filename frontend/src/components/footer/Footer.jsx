@@ -79,7 +79,7 @@ const Footer = () => {
           </ul>
           <div className="mt-4">
             <a
-              href="https://www.google.com/local/place/fid/0x3a3829fb6890c505:0x6d641c9cfcc4d9f0/photosphere?iu=https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid%3DskMP2bSL7k965YnsoKB56A%26cb_client%3Dsearch.gws-prod.gps%26yaw%3D356.4452%26pitch%3D0%26thumbfov%3D100%26w%3D0%26h%3D0&ik=CAISFnNrTVAyYlNMN2s5NjVZbnNvS0I1NkE%3D&sa=X&ved=2ahUKEwjym4L5zbWPAxWok68BHZG-IOMQpx96BAgaEBE"
+              href="https://maps.app.goo.gl/iTsUcyxS7i1A2Acx8"
               target="_blank"
               rel="noopener noreferrer"
               className="text-blue-400 hover:text-blue-500"

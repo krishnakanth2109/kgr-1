@@ -1,7 +1,6 @@
 import axios from 'axios';
 
 // 1. Determine Base URL
-// Checks Vite env, CRA env, or falls back to localhost
 const BASE_URL = 
   import.meta.env.VITE_API_URL || 
   process.env.REACT_APP_API_URL || 
@@ -16,19 +15,32 @@ const api = axios.create({
 });
 
 // 3. Request Interceptor
-// Automatically attaches the JWT token to every request
 api.interceptors.request.use(
   (config) => {
-    // Check LocalStorage AND SessionStorage to ensure compatibility
-    const adminToken = localStorage.getItem('admin-token') || sessionStorage.getItem('admin-token');
-    const studentToken = localStorage.getItem('student-token') || sessionStorage.getItem('student-token');
+    // A. Detect Route Type
+    const isStudentRoute = window.location.pathname.startsWith('/student');
+    
+    // B. Retrieve Tokens
+    const adminToken = localStorage.getItem('admin-token');
+    const studentToken = sessionStorage.getItem('student-token');
 
-    // Use Admin token if available, otherwise Student token
-    const token = adminToken || studentToken;
+    let tokenToUse = null;
 
-    if (token) {
-      config.headers['x-auth-token'] = token;
+    // C. Smart Token Selection
+    if (isStudentRoute) {
+        // If on student pages, ONLY use student token
+        tokenToUse = studentToken;
+    } else {
+        // If on admin/other pages, use Admin token
+        // Fallback to student token only if admin is missing (rare case)
+        tokenToUse = adminToken || studentToken;
     }
+
+    // D. Attach Token if it exists and is not literal "null" string
+    if (tokenToUse && tokenToUse !== 'null' && tokenToUse !== 'undefined') {
+      config.headers['x-auth-token'] = tokenToUse;
+    }
+
     return config;
   },
   (error) => {
@@ -36,16 +48,14 @@ api.interceptors.request.use(
   }
 );
 
-// 4. Response Interceptor (Optional but recommended)
-// Handles global responses or errors (like 401 Unauthorized)
+// 4. Response Interceptor
 api.interceptors.response.use(
-  (response) => {
-    return response;
-  },
+  (response) => response,
   (error) => {
     if (error.response && error.response.status === 401) {
-      // Optional: You can trigger a logout here if needed
-      console.warn("Unauthorized: Token may be invalid or expired.");
+      console.warn("Unauthorized: The server rejected the token.");
+      // Optional: Redirect to login if needed
+      // window.location.href = '/login'; 
     }
     return Promise.reject(error);
   }

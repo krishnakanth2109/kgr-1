@@ -16,15 +16,26 @@ const Contact = () => {
 
   // Handle input change
   const handleChange = (e) => {
+    const { name, value } = e.target;
+
+    // --- NEW LOGIC: Prevent typing numbers in Full Name ---
+    if (name === "fullName") {
+      // Regex checks if the typed value contains any digit (0-9)
+      if (/\d/.test(value)) {
+        return; // Stop function execution, do not update state (prevents typing)
+      }
+    }
+    // -----------------------------------------------------
+
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value,
+      [name]: value,
     });
 
-    if (errors[e.target.name]) {
+    if (errors[name]) {
       setErrors({
         ...errors,
-        [e.target.name]: "",
+        [name]: "",
       });
     }
   };
@@ -34,19 +45,34 @@ const Contact = () => {
     let newErrors = {};
     let isValid = true;
 
+    // Name Validation
     if (!formData.fullName.trim()) {
       newErrors.fullName = "Full Name is required";
       isValid = false;
+    } else {
+      // Allow only letters and spaces (No numbers, no special symbols)
+      const nameRegex = /^[a-zA-Z\s]+$/;
+      if (!nameRegex.test(formData.fullName)) {
+        newErrors.fullName = "Name can only contain letters.";
+        isValid = false;
+      }
     }
+
+    // Email Validation
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
       isValid = false;
+    } else {
+      // Strict Email Regex
+      const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+      
+      if (!emailRegex.test(formData.email)) {
+        newErrors.email = "Invalid email format (e.g., .com, .in). Numbers not allowed at end.";
+        isValid = false;
+      }
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = "Enter a valid email address";
-      isValid = false;
-    }
+
+    // Message Validation
     if (!formData.message.trim()) {
       newErrors.message = "Message cannot be empty";
       isValid = false;
@@ -173,7 +199,7 @@ const Contact = () => {
               <div>
                 <label className="block text-gray-700 mb-1">Email</label>
                 <input
-                  type="email"
+                  type="text" // Changed from type="email" to text to allow custom validation without browser popup
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
